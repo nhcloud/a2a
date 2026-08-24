@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>A2A.Demo.HostedAgent</RootNamespace>
+    <AssemblyName>A2A.Demo.HostedAgent</AssemblyName>
+    <UserSecretsId>a2a-demo-hosted-agent</UserSecretsId>
+    <!-- AgentRunMode and the hosting A2A extensions are marked evaluation-only in 1.19.0. -->
+    <NoWarn>$(NoWarn);MEAI001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- A2A protocol server: task lifecycle, JSON-RPC endpoint, Agent Card hosting. -->
+    <PackageReference Include="A2A" Version="$(A2AProtocolVersion)" />
+    <PackageReference Include="A2A.AspNetCore" Version="$(A2AProtocolVersion)" />
+
+    <!-- Microsoft Agent Framework: the agent that actually does the thinking. -->
+    <PackageReference Include="Microsoft.Agents.AI" Version="$(AgentFrameworkVersion)" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="$(AgentFrameworkVersion)" />
+    <!-- One-line A2A hosting: app.MapA2A(agent, "/path"). Preview. -->
+    <PackageReference Include="Microsoft.Agents.AI.Hosting.A2A.AspNetCore" Version="$(AgentFrameworkPreviewVersion)" />
+    <PackageReference Include="OpenAI" Version="2.10.0" />
+  </ItemGroup>
+
+</Project>

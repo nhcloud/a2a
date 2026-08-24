@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>A2A.Demo.Client</RootNamespace>
+    <AssemblyName>A2A.Demo.Console</AssemblyName>
+    <UserSecretsId>a2a-demo-console</UserSecretsId>
+    <!-- AgentRunOptions.ContinuationToken / AllowBackgroundResponses are marked
+         evaluation-only in Agent Framework 1.19.0. The long-running demo uses them. -->
+    <NoWarn>$(NoWarn);MEAI001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Microsoft Agent Framework (.NET) 1.19.0 -->
+    <PackageReference Include="Microsoft.Agents.AI" Version="$(AgentFrameworkVersion)" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="$(AgentFrameworkVersion)" />
+    <!-- A2A integration ships on the same train, as a preview -->
+    <PackageReference Include="Microsoft.Agents.AI.A2A" Version="$(AgentFrameworkPreviewVersion)" />
+
+    <!-- The A2A protocol SDK, used directly where the demo shows the raw wire -->
+    <PackageReference Include="A2A" Version="$(A2AProtocolVersion)" />
+
+    <PackageReference Include="OpenAI" Version="2.10.0" />
+
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

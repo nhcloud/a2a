@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+    <!-- Microsoft Agent Framework .NET -->
+    <AgentFrameworkVersion>1.19.0</AgentFrameworkVersion>
+    <!-- The A2A integration + hosting packages ship on the same 1.19 train, as previews -->
+    <AgentFrameworkPreviewVersion>1.19.0-preview.260822.1</AgentFrameworkPreviewVersion>
+    <!-- The A2A protocol SDK the Agent Framework builds on -->
+    <A2AProtocolVersion>1.0.0-preview2</A2AProtocolVersion>
+  </PropertyGroup>
+</Project>

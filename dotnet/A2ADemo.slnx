@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="A2A.Demo.Console/A2A.Demo.Console.csproj" />
+  <Project Path="A2A.Demo.HostedAgent/A2A.Demo.HostedAgent.csproj" />
+</Solution>

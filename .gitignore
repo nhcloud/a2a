@@ -1,0 +1,17 @@
+bin/
+obj/
+.vs/
+*.user
+
+# Local configuration — never checked in.
+# .NET: copy the settings you need from the README into these.
+appsettings.Development.json
+appsettings.Local.json
+# Python: copy .env.template to python/.env.
+.env
+!.env.template
+
+# Python
+python/.venv/
+__pycache__/
+*.pyc
