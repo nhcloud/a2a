@@ -66,5 +66,10 @@ public sealed class AzureOpenAIOptions
 
     public string? ApiKey { get; set; }
 
-    public string Deployment { get; set; } = "gpt-4o-mini";
+    /// <summary>
+    /// Model deployment name. No default on purpose: it comes from the AzureOpenAI
+    /// section of appsettings.json (or appsettings.Development.json / user secrets).
+    /// Left unset, the host serves the offline scripted agent instead of guessing a model.
+    /// </summary>
+    public string? Deployment { get; set; }
 }

@@ -169,7 +169,8 @@ class AzureOpenAIAgentFactory(AgentFactory):
     def __init__(self) -> None:
         self._endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
         self._api_key = os.environ.get("AZURE_OPENAI_API_KEY")
-        self._deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-mini")
+        # No default: the deployment name comes from python/.env only.
+        self._deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT")
 
     @property
     def key(self) -> str:
@@ -177,17 +178,22 @@ class AzureOpenAIAgentFactory(AgentFactory):
 
     @property
     def display_name(self) -> str:
+        if not self._deployment:
+            return "Local Azure OpenAI agent (no deployment configured)"
         return f"Local Azure OpenAI agent ({self._deployment})"
 
     @property
     def is_configured(self) -> bool:
-        return bool(self._endpoint and self._api_key)
+        return bool(self._endpoint and self._api_key and self._deployment)
 
     @property
     def configuration_hint(self) -> str | None:
         if self.is_configured:
             return None
-        return "Set AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY and AZURE_OPENAI_DEPLOYMENT."
+        return (
+            "Set AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY and "
+            "AZURE_OPENAI_DEPLOYMENT in python/.env."
+        )
 
     async def create_agent(self) -> BaseAgent:
         if not self.is_configured:

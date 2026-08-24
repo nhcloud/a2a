@@ -63,15 +63,19 @@ class AzureOpenAIOptions:
     ("https://{resource}.services.ai.azure.com/openai/v1") or a classic Azure OpenAI
     resource URL ("https://{resource}.openai.azure.com/"). Leave it blank to run the
     demo fully offline against the scripted agent.
+
+    ``deployment`` has no default and is read from python/.env only, so the model
+    name lives in exactly one place. Without it the host serves the offline scripted
+    agent rather than guessing a model.
     """
 
     endpoint: str | None = None
     api_key: str | None = None
-    deployment: str = "gpt-4o-mini"
+    deployment: str | None = None
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.endpoint and self.api_key)
+        return bool(self.endpoint and self.api_key and self.deployment)
 
 
 @dataclass
@@ -125,9 +129,8 @@ def load_settings(path: Path | str = DEFAULT_SETTINGS_PATH) -> HostSettings:
     azure_openai = AzureOpenAIOptions(
         endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT") or aoai_section.get("Endpoint") or None,
         api_key=os.environ.get("AZURE_OPENAI_API_KEY") or aoai_section.get("ApiKey") or None,
-        deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT")
-        or aoai_section.get("Deployment")
-        or AzureOpenAIOptions.deployment,
+        # Deployment comes from .env only — no appsettings.json key, no code default.
+        deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT") or None,
     )
 
     return HostSettings(

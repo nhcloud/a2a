@@ -106,8 +106,11 @@ that matter are:
 ```ini
 AZURE_OPENAI_ENDPOINT=https://<resource>.services.ai.azure.com/openai/v1
 AZURE_OPENAI_API_KEY=<key>
-AZURE_OPENAI_DEPLOYMENT=gpt-4o-mini
+AZURE_OPENAI_DEPLOYMENT=gpt-5.4
 ```
+
+The deployment name is read from `.env` only — no code default, and no `Deployment` key
+in `python/appsettings.json`. Leave it out and the Python stack runs offline.
 
 ### .NET — `appsettings.Development.json`
 
@@ -122,7 +125,7 @@ the hosted agent:
   "AzureOpenAI": {
     "Endpoint": "https://<resource>.services.ai.azure.com/openai/v1",
     "ApiKey": "<key>",
-    "Deployment": "gpt-4o-mini"
+    "Deployment": "gpt-5.4"
   }
 }
 ```
@@ -135,13 +138,18 @@ the hosted agent:
   "AzureOpenAI": {
     "Endpoint": "https://<resource>.services.ai.azure.com/openai/v1",
     "ApiKey": "<key>",
-    "Deployment": "gpt-4o-mini"
+    "Deployment": "gpt-5.4"
   }
 }
 ```
 
 `dotnet user-secrets set "AzureOpenAI:ApiKey" "<key>"` works too, and keeps the key
 out of the working tree entirely.
+
+`AzureOpenAI:Deployment` has no default in the code either — it comes from
+`appsettings.json` (or the `Development` overlay / user secrets). Leave it blank and both
+.NET projects treat the model as unconfigured: the host serves the offline scripted
+agent, and `delegate` prints its "not configured" message.
 
 ### Endpoints and other knobs
 
@@ -320,7 +328,7 @@ python/
   a2a_host.py                    the Python A2A server (mirrors HostedAgent)
   hosted_agent/                  card, executor, skills, agent factory
   a2a_console.py                 the Python caller (mirrors Console)
-  appsettings.json               same schema as the .NET host's
+  appsettings.json               card + skills, same schema as the .NET host's
   requirements.txt               pinned Agent Framework + a2a-sdk versions
 ```
 

@@ -20,7 +20,12 @@ public sealed class AzureOpenAIOptions
 
     public string? ApiKey { get; set; }
 
-    public string Deployment { get; set; } = "gpt-4o-mini";
+    /// <summary>
+    /// Model deployment name. No default on purpose: it comes from the AzureOpenAI
+    /// section of appsettings.json (or appsettings.Development.json / user secrets).
+    /// Left unset, the factory reports itself unconfigured instead of guessing a model.
+    /// </summary>
+    public string? Deployment { get; set; }
 
     public string AgentName { get; set; } = "LocalCoordinator";
 
@@ -51,15 +56,19 @@ public sealed class AzureOpenAIAgentFactory : IAgentFactory
 
     public string Key => "azure-openai";
 
-    public string DisplayName => $"Local Azure OpenAI agent ({_options.Deployment})";
+    public string DisplayName => string.IsNullOrWhiteSpace(_options.Deployment)
+        ? "Local Azure OpenAI agent (no deployment configured)"
+        : $"Local Azure OpenAI agent ({_options.Deployment})";
 
     public bool IsConfigured =>
-        !string.IsNullOrWhiteSpace(_options.Endpoint) && !string.IsNullOrWhiteSpace(_options.ApiKey);
+        !string.IsNullOrWhiteSpace(_options.Endpoint)
+        && !string.IsNullOrWhiteSpace(_options.ApiKey)
+        && !string.IsNullOrWhiteSpace(_options.Deployment);
 
     public string? ConfigurationHint => IsConfigured
         ? null
-        : "Set AzureOpenAI:Endpoint, AzureOpenAI:ApiKey and AzureOpenAI:Deployment "
-        + "(appsettings.json, user secrets, or AZURE_OPENAI_* environment variables).";
+        : "Set AzureOpenAI:Endpoint, AzureOpenAI:ApiKey and AzureOpenAI:Deployment in "
+        + "appsettings.json (or appsettings.Development.json / user secrets).";
 
     public Task<AIAgent> CreateAgentAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult(_agent.Value);
@@ -100,6 +109,6 @@ public sealed class AzureOpenAIAgentFactory : IAgentFactory
             new ApiKeyCredential(_options.ApiKey!),
             new OpenAIClientOptions { Endpoint = new Uri(endpoint) });
 
-        return client.GetChatClient(_options.Deployment).AsIChatClient();
+        return client.GetChatClient(_options.Deployment!).AsIChatClient();
     }
 }

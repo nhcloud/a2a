@@ -55,6 +55,10 @@ offline agent and every demo still runs.
 `.env` wins over [appsettings.json](appsettings.json), which holds the Agent Card and
 skill metadata in the same schema the .NET host uses.
 
+`AZURE_OPENAI_DEPLOYMENT` is read from `.env` only — there is no default in the code and
+no `Deployment` key in `appsettings.json`, so the model name lives in exactly one place.
+Without it the host serves the offline scripted agent.
+
 ## The host
 
 ```bash

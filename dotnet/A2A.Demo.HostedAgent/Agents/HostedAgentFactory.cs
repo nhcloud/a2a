@@ -38,8 +38,13 @@ public sealed class HostedAgentFactory
     }
 
     /// <summary>True when a real model is wired up rather than the offline stub.</summary>
+    /// <remarks>
+    /// The deployment name counts: without one there is no model to call, so the host
+    /// falls back to the scripted agent rather than failing on the first request.
+    /// </remarks>
     public bool IsModelBacked => !string.IsNullOrWhiteSpace(_options.Endpoint)
-        && !string.IsNullOrWhiteSpace(_options.ApiKey);
+        && !string.IsNullOrWhiteSpace(_options.ApiKey)
+        && !string.IsNullOrWhiteSpace(_options.Deployment);
 
     public AIAgent Agent => _agent.Value;
 
@@ -69,7 +74,7 @@ public sealed class HostedAgentFactory
             new ApiKeyCredential(_options.ApiKey!),
             new OpenAIClientOptions { Endpoint = new Uri(endpoint) });
 
-        return client.GetChatClient(_options.Deployment).AsIChatClient();
+        return client.GetChatClient(_options.Deployment!).AsIChatClient();
     }
 }
 
