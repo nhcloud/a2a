@@ -1,20 +1,25 @@
-# Stage runbook
+# Guided walkthrough
 
-Timings assume the offline agent (`Demo:LongRunningStepSeconds: 3.0`). Total demo
-time ≈ 8 minutes if you run everything, ≈ 4 if you drop `stream` or `delegate`.
+Run the five demos in order and watch what the protocol actually does. Each step is a
+command, the output worth looking at, and the point it makes. Timings assume the
+offline agent (`Demo:LongRunningStepSeconds: 3.0`) — about 8 minutes end to end, or 4
+if you skip `stream` and `delegate`.
 
-## Before you walk on
+Slide numbers refer to [A2A_Talk.pptx](A2A_Talk.pptx) in this folder, so you can line
+each demo up with the deck.
+
+## Setup
 
 ```bash
 cd c:\repo\nhcloud\a2a
-dotnet build dotnet/A2ADemo.slnx                         # warm the build
+dotnet build dotnet/A2ADemo.slnx                         # first build takes a moment
 dotnet run --project dotnet/A2A.Demo.HostedAgent         # leave running, terminal 1
 curl http://localhost:5401/.well-known/agent-card.json   # confirm it answers
 ```
 
-Terminal 2, ready but not run: `dotnet run --project dotnet/A2A.Demo.Console`
+Terminal 2 is where you run the client: `dotnet run --project dotnet/A2A.Demo.Console`
 
-If you plan to run beat 7, warm the Python side too — a third terminal, left running:
+For step 7 you also need the Python side, in a third terminal:
 
 ```bash
 cd python
@@ -25,39 +30,39 @@ python a2a_host.py                                       # http://localhost:5402
 curl http://localhost:5402/.well-known/agent-card.json   # confirm it answers
 ```
 
-Two terminals side by side (three if you are doing beat 7). Font size up. The host
-terminal is worth showing — its log lines narrate the server side while the client
-talks.
+Keep the host terminal visible next to the client. Its log lines narrate the server
+side while the client talks, and the two halves together are more informative than
+either alone.
 
-**If the venue Wi-Fi is bad:** nothing here needs the internet once the build is
-warm. Leave Azure OpenAI unconfigured and the whole thing runs locally. You lose only
-the `delegate` demo, and the answers read `[offline demo agent]`, which is honest and
-takes three seconds to explain.
+**No internet needed** once the build is warm. Leave Azure OpenAI unconfigured and
+everything runs locally — the only demo you lose is `delegate`, and the answers read
+`[offline demo agent]` instead of model output.
 
-**If you want real model output:** set the user secrets from the README before you
-walk on, and check the host logs say `backend: Azure OpenAI via Microsoft Agent Framework`.
+**For real model output:** set the Azure OpenAI settings from the
+[README](README.md#configuration) first, then check the host logs say
+`backend: Azure OpenAI via Microsoft Agent Framework`.
 
 ---
 
-## Beat 1 — after slide 9 (Agent Cards & Discovery)
+## 1. Discovery — the Agent Card (slide 9)
 
 ```bash
 dotnet run --project dotnet/A2A.Demo.Console -- card
 ```
 
-**~20 seconds.** Point at three things:
+**~20 seconds.** Three things in the output:
 
 - Skills are declared, not discovered by trial and error.
 - The interface list is how the client picks a binding — nobody hardcodes a URL shape.
-- Scroll to the raw JSON: *"that's the whole contract. No SDK, no schema package,
-  no shared types."*
+- Scroll to the raw JSON: that is the whole contract. No SDK, no schema package, no
+  shared types.
 
-Line to land: **"I know what this agent can do and how to call it, and I still know
-nothing about how it is built."**
+The takeaway: you now know what this agent can do and how to call it, and still know
+nothing about how it is built.
 
 ---
 
-## Beat 2 — after slide 11 (Message vs. Task)
+## 2. Request / response — Message, not Task (slide 11)
 
 ```bash
 dotnet run --project dotnet/A2A.Demo.Console -- ask
@@ -69,58 +74,56 @@ dotnet run --project dotnet/A2A.Demo.Console -- ask
 contextId 6336b00e… | taskId (none) | task state (no task — answered as a Message)
 ```
 
-Say: *"No task was created. The agent could answer, so it answered."* Then note the
-second turn reuses the same `contextId` — that is the only thing making it a
-conversation.
+No task was created. The agent could answer, so it answered. Notice the second turn
+reuses the same `contextId` — that is the only thing making it a conversation.
 
-Also worth saying out loud: `A2AAgent` is an `AIAgent`. The call site is
+Worth noting in the code: `A2AAgent` is an `AIAgent`. The call site is
 `agent.RunAsync(text, session)`, identical to a local agent.
 
 ---
 
-## Beat 3 — the centrepiece, after slide 11 or 19
+## 3. Long-running work — the Task lifecycle (slides 11, 19)
 
 ```bash
 dotnet run --project dotnet/A2A.Demo.Console -- job
 ```
 
-**~15 seconds.** Three sections, and each earns a sentence:
+**~15 seconds.** The centrepiece. Three sections in the output:
 
-1. **Start** — returns in ~20 ms with a continuation token and `state: Submitted`.
-   *"The work has not started finishing. We just have a receipt."*
-2. **Poll** — watch `Working` repeat while the character count climbs, then flip to
-   `Completed` and the token go null. *"That is the whole long-running pattern. No open
-   connection, no webhook, no polling loop I had to write."*
-3. **The wire** — the `tasks/get` dump showing history, artifact id, part count.
-   *"One artifact, four parts, appended as the agent wrote them."*
+1. **Start** — returns in ~20 ms with a continuation token and `state: Submitted`. The
+   work has not started finishing; you just have a receipt.
+2. **Poll** — `Working` repeats while the character count climbs, then flips to
+   `Completed` and the token goes null. That is the whole long-running pattern: no open
+   connection, no webhook, no polling loop in your own code.
+3. **The wire** — the `tasks/get` dump showing history, artifact id, and part count.
+   One artifact, four parts, appended as the agent wrote them.
 
-Closing line: **"That task id is durable. A different process, or the same process
-tomorrow, can pick it up."**
+The task id is durable. A different process, or the same process tomorrow, can pick it
+up.
 
 ---
 
-## Beat 4 — optional, if you have time, after slide 10
+## 4. Streaming — same work, different delivery (slide 10, optional)
 
 ```bash
 dotnet run --project dotnet/A2A.Demo.Console -- stream
 ```
 
-**~15 seconds, and it is 12 of them watching a progress bar.** Run it only if the
-room is engaged — it is the prettiest output in the set but the least surprising.
+**~15 seconds,** most of it watching a progress bar. It is the prettiest output in the
+set and the least surprising — skip it if you are short on time, since step 3 already
+makes the point.
 
-The thing to say: this is the **same server-side work** as the polling demo. Nothing
+What matters: this is the **same server-side work** as the polling demo. Nothing
 changed but `RunStreamingAsync`. The `«` lines are real A2A events —
 `TaskStatusUpdate` carrying progress, `TaskArtifactUpdate` carrying content, with
 `append` and `lastChunk` visible.
 
-If you are short on time, cut this and describe it instead. Beat 3 makes the point.
-
 ---
 
-## Beat 5 — after slide 21 (Architecture & Patterns)
+## 5. Agents as tools — delegation (slide 21)
 
-**Needs Azure OpenAI.** Skip it if unconfigured — it prints a clean "not configured"
-message rather than an exception, but do not discover that live.
+**Needs Azure OpenAI.** Unconfigured, it prints a clean "not configured" message
+rather than an exception, but there is nothing to see.
 
 ```bash
 dotnet run --project dotnet/A2A.Demo.Console -- delegate
@@ -132,24 +135,25 @@ dotnet run --project dotnet/A2A.Demo.Console -- delegate
 AIFunction remoteAsTool = remote.AsAIFunction(new AIFunctionFactoryOptions { … });
 ```
 
-*"The local agent sees a tool. The remote agent sees an A2A message. Neither knows
-anything about the other's model or framework."*
-
-Then the punchline for the vendor-flexibility slide: **"Swap the remote agent for a
-partner's compatible agent and this code does not change."**
+The local agent sees a tool. The remote agent sees an A2A message. Neither knows
+anything about the other's model or framework — which is the vendor-flexibility
+argument: swap the remote agent for a partner's compatible agent and this code does not
+change.
 
 ---
 
-## Beat 6 — the host side, if someone asks "what did that cost you to build?"
+## 6. The host side — what it cost to build
 
-Show [Program.cs](dotnet/A2A.Demo.HostedAgent/Program.cs) and contrast the two paths:
+If you are wondering how much code sits behind all of this, open
+[Program.cs](dotnet/A2A.Demo.HostedAgent/Program.cs) and compare the two paths. The
+short one is:
 
 ```csharp
 // one line, no handler, no lifecycle code
 app.MapA2AJsonRpc(agent, "/a2a/simple");
 ```
 
-Then hit it live to prove it is real:
+Hit it directly to see it is real:
 
 ```bash
 curl -s -X POST http://localhost:5401/a2a/simple \
@@ -165,13 +169,13 @@ curl -s -X POST http://localhost:5401/a2a/simple-http/message:send \
   -d '{"message":{"role":"ROLE_USER","messageId":"1","parts":[{"text":"Hello"}]}}'
 ```
 
-*"Same agent, two bindings, and the caller picks from the card."*
+Same agent, two bindings, and the caller picks from the card.
 
 ---
 
-## Beat 7 — cross-language, and the one to keep if you cut anything
+## 7. Cross-language — the one to run if you only run one
 
-Two moves, both cheap, and together they are the strongest argument in the deck.
+Two moves, both cheap, and together they are the strongest evidence in the repo.
 
 **7a. Python client, .NET agent.** Nothing on the server changed.
 
@@ -179,11 +183,11 @@ Two moves, both cheap, and together they are the strongest argument in the deck.
 cd python && .venv\Scripts\python.exe a2a_console.py job
 ```
 
-*"Same remote agent. It does not know or care that this caller is Python."*
-**~20 seconds.**
+**~20 seconds.** Same remote agent. It does not know or care that this caller is
+Python.
 
-**7b. Flip it — .NET client, Python agent.** Start the Python host in a third
-terminal (or leave it running from the start):
+**7b. Flip it — .NET client, Python agent.** Start the Python host in a third terminal
+(or leave it running from setup):
 
 ```bash
 cd python && python a2a_host.py          # http://localhost:5402
@@ -195,15 +199,14 @@ Then point the .NET console at it:
 A2A__BaseUrl=http://localhost:5402 dotnet run --project dotnet/A2A.Demo.Console -- card job
 ```
 
-**~25 seconds.** The card demo shows a *different* agent name — "Contoso Research
-Agent (Python)" — so the room can see the swap actually happened. Then the job demo
-runs the identical lifecycle: background start, continuation token, six polls,
-`Completed`.
+**~25 seconds.** The card demo shows a *different* agent name — "Contoso Research Agent
+(Python)" — so you can see the swap really happened. Then the job demo runs the
+identical lifecycle: background start, continuation token, six polls, `Completed`.
 
-The line to land: **"A .NET client just drove a Python agent's task lifecycle. No
-adapter, no shared library, no shared types. It read a card and made calls."**
+A .NET client just drove a Python agent's task lifecycle. No adapter, no shared
+library, no shared types. It read a card and made calls.
 
-If the room is quiet, show the matrix instead of running both:
+All four combinations work:
 
 |                    | → .NET host | → Python host |
 | ------------------ | ----------- | ------------- |
@@ -212,34 +215,34 @@ If the room is quiet, show the matrix instead of running both:
 
 ---
 
-## Q&A ammunition
+## Common questions
 
 **"Is this production ready?"**
 The protocol core is 1.0 and behaved exactly as specified. The Agent Framework's A2A
 packages are all pre-release, and two APIs this demo uses are marked evaluation-only.
-See the maturity notes in the README — quoting the specific drift you hit is more
-credible than a general hedge.
+See the [maturity notes](README.md#maturity-notes-for-the-talk) in the README for the
+specific drift this build hit.
 
 **"How is this different from just calling their REST API?"**
-Point back at the card demo. Discovery, capability declaration, and a defined task
+Look back at the card demo. Discovery, capability declaration, and a defined task
 lifecycle come for free. With a bespoke API you write all three yourself, per vendor.
 
 **"What about auth?"**
 The card advertises security schemes; the client sends a bearer token
-(`A2A:BearerToken` in the console's config). The gateway pattern from the Akumina
-build adds Entra ID JWT validation on the JSON-RPC endpoint with the card left
-anonymous so callers can discover how to authenticate.
+(`A2A:BearerToken` in the console's config). A gateway pattern adds Entra ID JWT
+validation on the JSON-RPC endpoint with the card left anonymous, so callers can still
+discover how to authenticate.
 
 **"What if the remote agent goes away mid-task?"**
 The task id is the handle. `tasks/get` is a plain request — reconnecting is not a
 special case, and that is why the polling pattern matters more than streaming for
 anything genuinely long.
 
-**"Did you have to write adapters to make .NET and Python talk?"**
-No. One line: the Python card has to set `protocolVersion` explicitly, because
+**"Do you need adapters to make .NET and Python talk?"**
+No. One quirk: the Python card has to set `protocolVersion` explicitly, because
 protobuf omits empty strings and the .NET SDK marks the field required. That is the
-entire interop cost, and it is an SDK quirk, not a protocol one. The maturity notes
-in the README list the others I hit building the same host twice.
+entire interop cost, and it is an SDK quirk, not a protocol one. The maturity notes in
+the README list the others that came up building the same host twice.
 
 **"Why not just MCP?"**
 Slide 5. MCP gives one agent its tools; A2A lets independent agents delegate. The

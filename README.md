@@ -298,7 +298,7 @@ settling.
 
 ```
 .env.template                    copy to python/.env
-DEMO-SCRIPT.md                   stage runbook
+DEMO-SCRIPT.md                   guided walkthrough of the five demos
 
 dotnet/
   A2ADemo.slnx                   the solution
