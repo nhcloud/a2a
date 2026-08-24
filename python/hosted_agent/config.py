@@ -1,7 +1,10 @@
 """Configuration for the Python A2A host.
 
-Deliberately the same shape as the .NET host's appsettings.json, so the two hosts
-are configured identically and the talk can point at one file and mean both.
+Two sources, split by what they hold. appsettings.json carries the Agent Card and
+skill metadata in the same shape as the .NET host's, so the two hosts describe
+themselves identically. Azure OpenAI settings come from python/.env instead —
+dotenv is the Python convention, and it keeps credentials in a gitignored file
+rather than a committed one.
 """
 
 from __future__ import annotations
@@ -59,14 +62,14 @@ class DemoAgentOptions:
 class AzureOpenAIOptions:
     """Azure OpenAI settings for the Agent Framework agent behind the protocol.
 
+    All three come from python/.env only — no appsettings.json keys, no code
+    defaults — so each value lives in exactly one place and no credential is
+    resolvable from a file that git tracks. Leave any of them unset and the host
+    serves the offline scripted agent rather than guessing.
+
     ``endpoint`` accepts either an Azure AI Foundry v1 endpoint
     ("https://{resource}.services.ai.azure.com/openai/v1") or a classic Azure OpenAI
-    resource URL ("https://{resource}.openai.azure.com/"). Leave it blank to run the
-    demo fully offline against the scripted agent.
-
-    ``deployment`` has no default and is read from python/.env only, so the model
-    name lives in exactly one place. Without it the host serves the offline scripted
-    agent rather than guessing a model.
+    resource URL ("https://{resource}.openai.azure.com/").
     """
 
     endpoint: str | None = None
@@ -93,16 +96,16 @@ def _section(data: dict[str, Any], name: str) -> dict[str, Any]:
 
 
 def load_settings(path: Path | str = DEFAULT_SETTINGS_PATH) -> HostSettings:
-    """Reads appsettings.json, then lets environment variables win.
+    """Reads the Agent Card from appsettings.json and the rest from the environment.
 
-    Environment overrides match the .NET host's, so a single exported variable
-    configures whichever host you happen to be running.
+    Environment variable names match the .NET host's, so a single exported variable
+    configures whichever host you happen to be running. Azure OpenAI is environment
+    only; appsettings.json has no AzureOpenAI section to override.
     """
     path = Path(path)
     data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
     agent_section = _section(data, "A2AAgent")
-    aoai_section = _section(data, "AzureOpenAI")
     demo_section = _section(data, "Demo")
 
     agent = DemoAgentOptions(
@@ -126,10 +129,10 @@ def load_settings(path: Path | str = DEFAULT_SETTINGS_PATH) -> HostSettings:
         ],
     )
 
+    # python/.env only, by design — see AzureOpenAIOptions.
     azure_openai = AzureOpenAIOptions(
-        endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT") or aoai_section.get("Endpoint") or None,
-        api_key=os.environ.get("AZURE_OPENAI_API_KEY") or aoai_section.get("ApiKey") or None,
-        # Deployment comes from .env only — no appsettings.json key, no code default.
+        endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT") or None,
+        api_key=os.environ.get("AZURE_OPENAI_API_KEY") or None,
         deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT") or None,
     )
 

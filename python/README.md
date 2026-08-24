@@ -52,12 +52,15 @@ offline agent and every demo still runs.
 | `DEMO_LONG_RUNNING_STEP_SECONDS`                                    | Padding per step in the long job (default 3s) |
 | `A2A_BASE_URL`                                                      | Which agent the client calls             |
 
-`.env` wins over [appsettings.json](appsettings.json), which holds the Agent Card and
-skill metadata in the same schema the .NET host uses.
+The two files split by what they hold. [appsettings.json](appsettings.json) carries the
+Agent Card and skill metadata, in the same schema the .NET host uses. `.env` carries
+everything else, and is the **only** source for the `AZURE_OPENAI_*` values — there is no
+`AzureOpenAI` section in `appsettings.json` and no default in the code, so each setting
+lives in exactly one place and no credential is resolvable from a git-tracked file. Leave
+them unset and the host serves the offline scripted agent.
 
-`AZURE_OPENAI_DEPLOYMENT` is read from `.env` only — there is no default in the code and
-no `Deployment` key in `appsettings.json`, so the model name lives in exactly one place.
-Without it the host serves the offline scripted agent.
+`.env` still wins over `appsettings.json` for the keys both could set, which today is
+`DEMO_LONG_RUNNING_STEP_SECONDS` over `Demo:LongRunningStepSeconds`.
 
 ## The host
 

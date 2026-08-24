@@ -40,7 +40,7 @@ class ScriptedChatClient(BaseChatClient):
     """A deterministic offline chat client.
 
     So the demo runs with no keys, no quota, and no surprises. Swap in Azure OpenAI
-    by filling in the AzureOpenAI section of appsettings.json.
+    by filling in the AZURE_OPENAI_* variables in python/.env.
     """
 
     def _inner_get_response(  # type: ignore[override]
@@ -83,7 +83,7 @@ class ScriptedChatClient(BaseChatClient):
 
         return (
             f'[offline demo agent] You asked: "{prompt}". '
-            "Configure AzureOpenAI in appsettings.json to route this through a real model."
+            "Set the AZURE_OPENAI_* variables in python/.env to route this through a real model."
         )
 
 
