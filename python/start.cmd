@@ -3,7 +3,8 @@ REM Starts the Python side of the A2A demo, creating the venv on first run.
 REM
 REM   start.cmd                  the A2A hosted agent on http://localhost:5402
 REM   start.cmd host             same thing, explicitly
-REM   start.cmd client           every demo, against whatever A2A_BASE_URL points at
+REM   start.cmd client           interactive menu, against whatever A2A_BASE_URL points at
+REM   start.cmd client all       every demo, non-interactive
 REM   start.cmd client card job  just those demos
 REM
 REM Configure a real model by copying ..\.env.template to .env in this folder.

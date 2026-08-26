@@ -14,8 +14,9 @@ import os
 import sys
 import time
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Awaitable, Callable, Sequence
 
 import httpx
 from a2a.client import A2ACardResolver
@@ -23,6 +24,11 @@ from a2a.types import AgentCard
 from agent_framework import BaseAgent
 from agent_framework_a2a import A2AAgent
 from dotenv import load_dotenv
+
+# Match the .NET console's Console.OutputEncoding = UTF8. Without this, Windows
+# defaults to cp1252 and model prose comes back with mangled dashes and quotes.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 # Copy the repo root's .env.template to python/.env to configure this.
 load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
@@ -162,8 +168,9 @@ class A2AAgentFactory(AgentFactory):
 class AzureOpenAIAgentFactory(AgentFactory):
     """Builds an agent that runs in this process against Azure OpenAI.
 
-    The counterweight to the A2A factory: same return type, entirely different
-    execution model. Requires ``pip install agent-framework-azure-ai``.
+    The counterweight to the A2A factory: same return type, same call site,
+    entirely different execution model. This one owns the model, the prompt, and
+    the conversation state; the A2A one owns none of them.
     """
 
     def __init__(self) -> None:
@@ -195,22 +202,41 @@ class AzureOpenAIAgentFactory(AgentFactory):
             "AZURE_OPENAI_DEPLOYMENT in python/.env."
         )
 
-    async def create_agent(self) -> BaseAgent:
+    def _chat_client(self):
+        """Azure AI Foundry and Azure OpenAI both serve an OpenAI-compatible
+        ``/openai/v1`` surface, so one client covers both endpoint styles -- the
+        same trick the .NET factory uses.
+        """
         if not self.is_configured:
             raise RuntimeError(self.configuration_hint)
 
-        # Imported lazily so the A2A demos run without the Azure extra installed.
-        from agent_framework.azure import AzureOpenAIChatClient
+        # Imported lazily so the A2A demos run without the OpenAI extra installed.
+        from agent_framework.openai import OpenAIChatClient
 
-        client = AzureOpenAIChatClient(
-            endpoint=self._endpoint,
-            api_key=self._api_key,
-            deployment_name=self._deployment,
-        )
-        return client.create_agent(
+        endpoint = self._endpoint.rstrip("/")  # type: ignore[union-attr]
+        if not endpoint.lower().endswith("/openai/v1"):
+            endpoint += "/openai/v1"
+
+        return OpenAIChatClient(self._deployment, api_key=self._api_key, base_url=endpoint)
+
+    async def create_agent(self) -> BaseAgent:
+        from agent_framework import Agent
+
+        return Agent(
+            self._chat_client(),
+            "You are a helpful coordinator agent running locally. Be concise.",
             name="LocalCoordinator",
-            instructions="You are a helpful coordinator agent running locally. Be concise.",
         )
+
+    def create_agent_with_tools(self, name: str, instructions: str, tools: list) -> BaseAgent:
+        """Builds an agent with an explicit tool list.
+
+        Used by the delegation demo to hand a remote A2A agent to a local one as a
+        callable tool. Mirrors the .NET ``CreateAgentWithTools``.
+        """
+        from agent_framework import Agent
+
+        return Agent(self._chat_client(), instructions, name=name, tools=tools)
 
 
 class AgentFactoryProvider:
@@ -356,12 +382,163 @@ async def demo_job(provider: AgentFactoryProvider) -> None:
     Ux.step("The Task outlived the request that created it -- a taskId is a durable handle.")
 
 
-DEMOS = {
-    "card": ("Discovery -- read the Agent Card", demo_card),
-    "ask": ("Request / response -- call the remote agent", demo_ask),
-    "stream": ("Streaming -- watch a long job report progress live", demo_stream),
-    "job": ("Long-running job -- start, walk away, come back", demo_job),
-}
+async def demo_delegate(provider: AgentFactoryProvider) -> None:
+    """Agents as tools -- a local agent decides, on its own, to hand work to a remote one.
+
+    The local agent has no idea it is making a network call. It sees a tool. The
+    remote agent has no idea it is being orchestrated. It sees an A2A message.
+    Neither knows the other's model, framework, or prompts -- the contract is the
+    Agent Card and nothing else.
+    """
+    azure: AzureOpenAIAgentFactory = provider.get("azure-openai")  # type: ignore[assignment]
+
+    if not azure.is_configured:
+        Ux.warn("This demo needs a local model to do the orchestrating.")
+        Ux.info(azure.configuration_hint)
+        return
+
+    # The remote agent, reached over A2A.
+    remote = await provider.create("a2a")
+
+    # One call turns it into a tool the local agent can invoke.
+    remote_as_tool = remote.as_tool(
+        name="contoso_research_agent",
+        description=(
+            "Delegates a question or a research request to the Contoso Research Agent, "
+            "a specialist agent reachable over A2A. Use it for anything involving market "
+            "research, competitive analysis, or reports."
+        ),
+    )
+
+    Ux.heading("Wiring")
+    Ux.info(f"Local agent  : {azure.display_name}")
+    Ux.info(f"Remote agent : {remote.name} (over A2A)")
+    Ux.step(f'Exposed to the local agent as tool "{remote_as_tool.name}".')
+
+    coordinator = azure.create_agent_with_tools(
+        name="Coordinator",
+        instructions=(
+            "You are a coordinator. You have no research ability of your own.\n"
+            "Whenever the user asks anything that needs research, market knowledge,\n"
+            "or a report, call the contoso_research_agent tool and relay what it\n"
+            "returns. Say which agent produced the answer."
+        ),
+        tools=[remote_as_tool],
+    )
+
+    session = coordinator.create_session()
+
+    request = ("I need to understand the market for AI agent interoperability tooling. "
+               "Get me the key points.")
+    Ux.prompt(request)
+
+    response = await coordinator.run(request, session=session)
+    Ux.agent(response.text)
+
+    tool_calls = sum(
+        1
+        for message in response.messages
+        for content in message.contents
+        if getattr(content, "type", None) == "function_call"
+    )
+
+    Ux.step(f"{tool_calls} delegated call(s) crossed the A2A boundary during that turn.")
+    Ux.success("Swap the remote agent for a partner's compatible agent and this code does not change.")
+
+
+@dataclass(frozen=True)
+class Demo:
+    """One runnable beat of the demo -- the .NET ``IDemoScenario``, minus the DI."""
+
+    key: str
+    """Menu key, also accepted as a command-line argument."""
+
+    title: str
+    summary: str
+    """The point this demo makes, shown under the title."""
+
+    run: Callable[[AgentFactoryProvider], Awaitable[None]]
+
+
+DEMOS: list[Demo] = [
+    Demo("card",
+         "Discovery -- read the Agent Card",
+         "Fetch the remote agent's business card before calling it.",
+         demo_card),
+    Demo("ask",
+         "Request / response -- call the remote agent",
+         "One message in, one message out, over A2A.",
+         demo_ask),
+    Demo("stream",
+         "Streaming -- watch a long job report progress live",
+         "SSE: task status transitions and artifact chunks as they happen.",
+         demo_stream),
+    Demo("job",
+         "Long-running job -- start, walk away, come back",
+         "Background start, continuation-token polling, and the Task on the wire.",
+         demo_job),
+    Demo("delegate",
+         "Delegation -- a local agent calls the remote one as a tool",
+         "Azure OpenAI agent orchestrates; the A2A agent executes.",
+         demo_delegate),
+]
+
+DEMOS_BY_KEY = {demo.key: demo for demo in DEMOS}
+
+
+async def run_demo(provider: AgentFactoryProvider, key: str) -> None:
+    """Run one demo by key, keeping the console alive whatever it throws."""
+    demo = DEMOS_BY_KEY.get(key.strip().lower())
+    if demo is None:
+        Ux.error(f"Unknown demo '{key}'. Known: {', '.join(DEMOS_BY_KEY)}.")
+        return
+
+    Ux.banner(demo.title, demo.summary)
+
+    try:
+        await demo.run(provider)
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        Ux.warn("Canceled.")
+    except httpx.HTTPError as exc:
+        Ux.error(f"Could not reach the remote agent: {exc}")
+        Ux.info("Start it with:  dotnet run --project ../dotnet/A2A.Demo.HostedAgent")
+    except Exception as exc:  # noqa: BLE001 - demo surface, keep the console alive
+        Ux.error(f"{type(exc).__name__}: {exc}")
+
+
+async def read_choice() -> str | None:
+    """Prompt for a menu selection. ``None`` means quit (EOF or Ctrl+C)."""
+    try:
+        return (await asyncio.to_thread(input, f"\n{Ux.CYAN}  select -> {Ux.RESET}")).strip()
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return None
+
+
+async def menu(provider: AgentFactoryProvider) -> None:
+    """The interactive loop -- same shape as the .NET console's."""
+    while True:
+        Ux.heading("Demos")
+        for index, demo in enumerate(DEMOS, start=1):
+            Ux.content(f"{index}. {demo.title}")
+            Ux.info(f"   {demo.summary}")
+        Ux.content("q. quit")
+
+        choice = await read_choice()
+        if not choice or choice.lower() == "q":
+            return
+
+        chosen = (
+            DEMOS[int(choice) - 1]
+            if choice.isdigit() and 1 <= int(choice) <= len(DEMOS)
+            else DEMOS_BY_KEY.get(choice.lower())
+        )
+
+        if chosen is None:
+            Ux.error(f"No demo matches '{choice}'.")
+            continue
+
+        await run_demo(provider, chosen.key)
 
 
 async def main(argv: list[str]) -> int:
@@ -380,23 +557,15 @@ async def main(argv: list[str]) -> int:
         else:
             Ux.warn(f"{factory.key:<14} not configured -- {factory.configuration_hint}")
 
-    requested = argv or list(DEMOS)
-
     try:
-        for key in requested:
-            if key not in DEMOS:
-                Ux.error(f"Unknown demo '{key}'. Known: {', '.join(DEMOS)}.")
-                continue
+        # Non-interactive mode: pass demo keys as arguments, or "all".
+        if argv:
+            requested = list(DEMOS_BY_KEY) if argv[0].lower() == "all" else argv
+            for key in requested:
+                await run_demo(provider, key)
+            return 0
 
-            title, run = DEMOS[key]
-            Ux.banner(title, f"python a2a_console.py {key}")
-            try:
-                await run(provider)
-            except httpx.HTTPError as exc:
-                Ux.error(f"Could not reach the remote agent: {exc}")
-                Ux.info("Start it with:  dotnet run --project ../dotnet/A2A.Demo.HostedAgent")
-            except Exception as exc:  # noqa: BLE001 - demo surface, keep the console alive
-                Ux.error(f"{type(exc).__name__}: {exc}")
+        await menu(provider)
     finally:
         await a2a_factory.aclose()
 

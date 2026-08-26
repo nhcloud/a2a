@@ -45,7 +45,8 @@ python/start.cmd            # Python, http://localhost:5402
 dotnet/start.cmd client            # interactive menu
 dotnet/start.cmd client all        # run every demo
 dotnet/start.cmd client job        # just the long-running one
-python/start.cmd client card job   # the Python caller
+python/start.cmd client            # the Python caller, same interactive menu
+python/start.cmd client card job   # or pick demos up front
 ```
 
 Or drive the projects directly. The solution lives in `dotnet/`, alongside the SDK pin

@@ -3,7 +3,8 @@
 #
 #   ./start.sh                  the A2A hosted agent on http://localhost:5402
 #   ./start.sh host             same thing, explicitly
-#   ./start.sh client           every demo, against whatever A2A_BASE_URL points at
+#   ./start.sh client           interactive menu, against whatever A2A_BASE_URL points at
+#   ./start.sh client all       every demo, non-interactive
 #   ./start.sh client card job  just those demos
 #
 # Configure a real model by copying ../.env.template to .env in this folder.

@@ -43,7 +43,7 @@ cp ../.env.template .env         # copy ..\.env.template .env  on Windows
 
 Both the host and the client read it. It is gitignored, so keys stay out of the repo.
 Everything in it is optional — with no `.env` at all the host falls back to a scripted
-offline agent and every demo still runs.
+offline agent and every demo except `delegate` still runs.
 
 | Variable                                                            | Purpose                                  |
 | ------------------------------------------------------------------- | ---------------------------------------- |
@@ -99,9 +99,10 @@ hosted_agent/
 ## The client
 
 ```bash
-start.cmd client                 # all demos
+start.cmd client                 # interactive menu
+start.cmd client all             # run every demo
 start.cmd client card ask job    # pick specific ones
-./start.sh client all            # macOS / Linux
+./start.sh client                # macOS / Linux
 
 python a2a_console.py card       # or drive it directly
 ```
@@ -113,8 +114,10 @@ host). Override it per-run:
 A2A_BASE_URL=http://localhost:5402 python a2a_console.py all
 ```
 
-Demos: `card`, `ask`, `stream`, `job`. (The .NET client's fifth demo, `delegate`,
-has no Python equivalent here — it needs a local model to do the orchestrating.)
+Demos: `card`, `ask`, `stream`, `job`, `delegate` — the same five as the .NET
+client, in the same order. `delegate` is the only one that needs Azure OpenAI
+configured, because something has to do the orchestrating; it prints a hint and
+returns if you have not set it up.
 
 ## Versions
 
