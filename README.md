@@ -201,6 +201,12 @@ POST /a2a                                JSON-RPC
 GET  /.well-known/agent-card.json        discovery
 ```
 
+On the .NET side these two are MVC controllers rather than `app.MapA2A("/a2a")` /
+`app.MapWellKnownAgentCard(card)`. Functionally identical — `MapA2A` parses the same
+envelope and calls the same `IA2ARequestHandler` — but every call the console makes now
+lands on a named method you can breakpoint, and each logs which demo produced it. See
+[which demo hits what](#which-demo-hits-what) below.
+
 **One line** — the Agent Framework hosting package, no handler, no lifecycle code:
 
 ```csharp
@@ -229,6 +235,45 @@ GET  /a2a/simple-http/card               HTTP+JSON card (.NET only)
 One behavioural difference worth knowing: .NET's one-liner returns a plain `Message`
 when the agent can answer immediately, while Python's `A2AExecutor` always creates a
 `Task`. Both are legal A2A; they are not the same caller experience.
+
+## Which demo hits what
+
+Every console demo reaches the .NET host through one of two controllers, and the
+host logs a line naming the demo as each call arrives. Method names are the A2A 1.0
+ones (`SendMessage`, `GetTask`) — not the pre-1.0 `message/send` / `tasks/get`.
+
+| Demo             | Request                                          | Lands on                              |
+| ---------------- | ------------------------------------------------ | ------------------------------------- |
+| 1 `card`         | `GET /.well-known/agent-card.json`               | `AgentCardController.Get`             |
+| 2 `ask`          | `POST /a2a` · `SendMessage` (one per turn)       | `A2AController.SendMessageAsync`      |
+| 3 `stream`       | `POST /a2a` · `SendStreamingMessage` (SSE)       | `A2AController.SendStreamingMessage`  |
+| 4 `job`          | `POST /a2a` · `SendMessage`, `returnImmediately: true` | `A2AController.SendMessageAsync` |
+|                  | then `GetTask` once per poll, and once more raw  | `A2AController.GetTaskAsync`          |
+| 5 `delegate`     | `POST /a2a` · `SendMessage` (the local agent's tool call) | `A2AController.SendMessageAsync` |
+
+Demos 2–5 also fetch the card first: `A2AAgentFactory` resolves it before it will
+build an `AIAgent`, so `AgentCardController` is hit on the way into every demo.
+
+`ListTasks`, `CancelTask`, `SubscribeToTask` and `GetExtendedAgentCard` are wired up
+but no demo calls them. Ctrl+C during demo 4 will reach `CancelTaskAsync`.
+
+A run of `start.cmd client all` against the host prints, on the host side:
+
+```
+→ GET /.well-known/agent-card.json  ← demo 1 'card' — and every other demo, …
+→ POST /a2a  SendMessage  (id e35dd979-…)  ← demo 2 'ask' (one per turn) · …
+   SendMessage | returnImmediately False | text "What are your capabilities?"
+   ← Message
+→ POST /a2a  SendStreamingMessage  (id …)  ← demo 3 'stream' (SSE: …)
+→ POST /a2a  SendMessage  (id …)  ← demo 2 'ask' …
+   SendMessage | returnImmediately True | text "Research the market for AI agent …"
+   ← Task id 7b904745… state Submitted
+→ POST /a2a  GetTask  (id …)  ← demo 4 'job' (every continuation-token poll, …)
+   GetTask 7b904745… | state Working | 1 artifact(s)
+```
+
+The Python host is unchanged and still uses the a2a-sdk's own Starlette app, so this
+mapping is .NET-only.
 
 ## The two skills
 
@@ -315,6 +360,9 @@ dotnet/
   start.cmd / start.sh           run the host, or the client with demo args
   A2A.Demo.HostedAgent/          the .NET A2A server
     Program.cs                   card, two hosting paths, endpoints
+    Controllers/A2AController.cs the JSON-RPC surface, one method per A2A verb
+    Controllers/AgentCardController.cs  discovery
+    Controllers/DemoTrace.cs     logs which console demo produced each call
     Agents/DemoAgentHandler.cs   IAgentHandler — routes to a skill
     Agents/HostedAgentFactory.cs the Agent Framework agent + offline fallback
     Skills/QuickAnswerSkill.cs   Message path

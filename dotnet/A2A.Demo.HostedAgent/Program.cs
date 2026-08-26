@@ -3,6 +3,10 @@ using A2A.Demo.HostedAgent.Agents;
 using Microsoft.Agents.AI.Hosting.A2A;
 using Microsoft.Extensions.Options;
 
+// The controllers log an arrow per inbound call; without this the console codepage
+// mangles them. Matches what the demo console already does.
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<DemoAgentOptions>(
@@ -36,8 +40,16 @@ builder.Services.AddSingleton<IA2ASkill, QuickAnswerSkill>();     // catch-all
 AgentCard agentCard = BuildAgentCard(agentOptions);
 
 // Registers the handler plus the A2A server infrastructure: task store, event
-// notifier, and the JSON-RPC request handler that MapA2A exposes.
+// notifier, and the IA2ARequestHandler that A2AController calls into.
 builder.Services.AddA2AAgent<DemoAgentHandler>(agentCard);
+
+// The card as a service, so AgentCardController can inject it.
+builder.Services.AddSingleton(agentCard);
+
+// MVC, because path 1's protocol surface is a controller rather than MapA2A. The
+// controllers hand back A2A.AspNetCore's own IResult types for the wire format, so
+// MVC's JSON formatters never touch an A2A payload and need no configuration here.
+builder.Services.AddControllers();
 
 // ── Path 2: the one-liner ───────────────────────────────────────────────────────
 // Publishes the same Agent Framework agent with no handler and no lifecycle code.
@@ -49,16 +61,19 @@ builder.AddA2AServer(agentFactory.Agent, options =>
 
 var app = builder.Build();
 
-// Path 1 endpoints:
-//   POST /a2a                              JSON-RPC: SendMessage, SendStreamingMessage,
+// Path 1 endpoints, all attribute-routed on controllers so every call the console
+// makes lands on a named method you can breakpoint:
+//   POST /a2a                              A2AController: SendMessage, SendStreamingMessage,
 //                                          GetTask, CancelTask, ListTasks, ...
-//   GET  /a2a/.well-known/agent-card.json
-app.MapA2A("/a2a");
+//   GET  /.well-known/agent-card.json      AgentCardController — standard root discovery,
+//   GET  /a2a/.well-known/agent-card.json  so any client can find this agent from the
+//                                          base URL alone (talk slide 9).
+//   GET  /                                 redirect to the card
+app.MapControllers();
 
-// Standard root discovery location, so any A2A client can find this agent with
-// nothing but the base URL (talk slide 9).
-app.MapWellKnownAgentCard(agentCard);
-
+// Path 2 stays a minimal-API one-liner on purpose: the contrast with the controller
+// above is the point. Same agent, no handler, no controller, no lifecycle code.
+//
 // Path 2 endpoints — two bindings, because A2A 1.0 defines more than one and the
 // hosting package exposes them separately:
 //   POST /a2a/simple                        JSON-RPC
@@ -68,16 +83,14 @@ app.MapWellKnownAgentCard(agentCard);
 app.MapA2AJsonRpc(agentFactory.Agent, "/a2a/simple");
 app.MapA2AHttpJson(agentFactory.Agent, "/a2a/simple-http");
 
-app.MapGet("/", () => Results.Redirect("/.well-known/agent-card.json"));
-
 app.Logger.LogInformation(
     "A2A agent '{Name}' | backend: {Backend}",
     agentOptions.Name,
     agentFactory.IsModelBacked ? "Azure OpenAI via Microsoft Agent Framework" : "offline scripted agent");
 app.Logger.LogInformation(
-    "  card        {BaseUrl}/.well-known/agent-card.json", agentOptions.PublicBaseUrl.TrimEnd('/'));
+    "  card        {BaseUrl}/.well-known/agent-card.json  (AgentCardController)", agentOptions.PublicBaseUrl.TrimEnd('/'));
 app.Logger.LogInformation(
-    "  full-control JSON-RPC  {BaseUrl}/a2a", agentOptions.PublicBaseUrl.TrimEnd('/'));
+    "  full-control JSON-RPC  {BaseUrl}/a2a  (A2AController)", agentOptions.PublicBaseUrl.TrimEnd('/'));
 app.Logger.LogInformation(
     "  one-liner    JSON-RPC  {BaseUrl}/a2a/simple", agentOptions.PublicBaseUrl.TrimEnd('/'));
 app.Logger.LogInformation(

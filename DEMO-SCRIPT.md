@@ -32,7 +32,18 @@ curl http://localhost:5402/.well-known/agent-card.json   # confirm it answers
 
 Keep the host terminal visible next to the client. Its log lines narrate the server
 side while the client talks, and the two halves together are more informative than
-either alone.
+either alone. The .NET host's protocol surface is a pair of controllers
+([A2AController](dotnet/A2A.Demo.HostedAgent/Controllers/A2AController.cs),
+[AgentCardController](dotnet/A2A.Demo.HostedAgent/Controllers/AgentCardController.cs)),
+so each inbound call prints an arrow line naming the demo that produced it:
+
+```
+→ POST /a2a  SendMessage  (id e35dd979-…)  ← demo 2 'ask' (one per turn) · …
+```
+
+If you would rather step through it than read it, breakpoint the matching method —
+`SendMessageAsync`, `SendStreamingMessage`, `GetTaskAsync`. The full mapping is in the
+[README](README.md#which-demo-hits-what).
 
 **No internet needed** once the build is warm. Leave Azure OpenAI unconfigured and
 everything runs locally — the only demo you lose is `delegate`, and the answers read
