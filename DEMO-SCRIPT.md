@@ -5,8 +5,8 @@ command, the output worth looking at, and the point it makes. Timings assume the
 offline agent (`Demo:LongRunningStepSeconds: 3.0`) — about 8 minutes end to end, or 4
 if you skip `stream` and `delegate`.
 
-Slide numbers refer to [A2A.pdf](A2A.pdf) in this folder, so you can line
-each demo up with the deck.
+Slide numbers refer to [A2A.pdf](A2A.pdf) in this folder — also published
+[on SlideShare](https://www.slideshare.net/slideshow/when-ai-agents-work-together-exploring-a2a-mcp-and-connected-ai-frameworks-udaiappa-ramachandran/289536706) — so you can line each demo up with the deck.
 
 ## Setup
 

@@ -1,9 +1,9 @@
-<!-- Demo companion for the A2A.pdf deck in this folder. -->
+<!-- Demo companion for the A2A.pdf deck in this folder; also published on SlideShare. -->
 
 # A2A + Microsoft Agent Framework — live demo
 
 Companion code for **"When AI Agents Work Together: A2A, MCP, and Connected AI"**
-([A2A.pdf](A2A.pdf)), a talk by
+([A2A.pdf](A2A.pdf) · [SlideShare](https://www.slideshare.net/slideshow/when-ai-agents-work-together-exploring-a2a-mcp-and-connected-ai-frameworks-udaiappa-ramachandran/289536706)), a talk by
 **[Udaiappa Ramachandran](https://linkedin.com/in/udair)** (Udai) — Microsoft MVP (AI).
 
 Two hosts and two clients, one protocol. Each host publishes an agent over A2A;
@@ -408,6 +408,7 @@ Local settings live in `python/.env` and `appsettings.Development.json` next to 
 - Agent Framework A2A docs — <https://learn.microsoft.com/agent-framework/integrations/a2a>
 - Agent Framework repo — <https://github.com/microsoft/agent-framework>
 - A2A SDKs — <https://github.com/a2aproject>
+- The deck — [A2A.pdf](A2A.pdf) in this repo, or [on SlideShare](https://www.slideshare.net/slideshow/when-ai-agents-work-together-exploring-a2a-mcp-and-connected-ai-frameworks-udaiappa-ramachandran/289536706)
 
 ## Author
 
