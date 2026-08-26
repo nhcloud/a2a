@@ -310,26 +310,31 @@ Checked against nuget.org and PyPI on 2026-08-23.
 
 Versions are centralised in [dotnet/Directory.Build.props](dotnet/Directory.Build.props).
 
-### Maturity notes for the talk
+### Maturity notes
 
-Slide 13 says "stable core, evolving tooling". This build ran into exactly that, and
-these are worth mentioning on stage because they are the honest state of things:
+A2A 1.0 has a stable core and evolving tooling, and this build ran into exactly that.
+The notes below are the honest state of things as of the versions in the table above —
+useful if you hit the same walls.
+
+**Package and API stability**
 
 - **The Agent Framework's A2A packages are all pre-release**, while the core framework
   is stable at 1.19.0. Python trails at 1.15.0 with a beta A2A package.
 - **`AllowBackgroundResponses` and `ContinuationToken` are marked evaluation-only**
   (`MEAI001`) in .NET. Using them needs `<NoWarn>$(NoWarn);MEAI001</NoWarn>`. They work,
   but the API can move.
-- **The hosting API has already moved.** Slide 17's `app.MapA2A(agent, path, agentCard: …)`
-  is not the current shape; 1.19 splits it into `MapA2AJsonRpc` and `MapA2AHttpJson`,
-  and the run mode moves to `AddA2AServer`.
+- **The hosting API has already moved.** The `app.MapA2A(agent, path, agentCard: …)`
+  one-liner in older samples is not the current shape; 1.19 splits it into
+  `MapA2AJsonRpc` and `MapA2AHttpJson`, and the run mode moves to `AddA2AServer`.
 - **The HTTP+JSON routes have no `/v1` segment** in `A2A` 1.0.0-preview2 — it is
-  `/message:send`, not `/v1/message:send` as slide 18 shows.
+  `/message:send`, not `/v1/message:send` as some samples show.
 - **JSON-RPC method names are PascalCase** in this SDK (`SendMessage`, `GetTask`), not
   the `message/send` form older samples use.
 
-And from building the same host twice, once per language — all SDK ergonomics, no
-protocol disagreement, and each one cost real debugging time:
+**Cross-language gotchas**
+
+From building the same host twice, once per language — all SDK ergonomics, no protocol
+disagreement, and each one costs real debugging time:
 
 - **`AgentInterface.protocolVersion` must be set explicitly in Python.** Protobuf
   omits empty strings from JSON and .NET marks the field required, so a Python card
