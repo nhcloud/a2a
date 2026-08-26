@@ -47,7 +47,7 @@ class DemoAgentOptions:
     discovery metadata is data, not code.
     """
 
-    name: str = "Contoso Research Agent"
+    name: str = "Nashua Research Agent"
     description: str = "A demo agent exposed over the Agent2Agent (A2A) protocol."
     version: str = "1.0.0"
     documentation_url: str | None = None

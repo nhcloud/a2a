@@ -210,7 +210,7 @@ Then point the .NET console at it:
 A2A__BaseUrl=http://localhost:5402 dotnet run --project dotnet/A2A.Demo.Console -- card job
 ```
 
-**~25 seconds.** The card demo shows a *different* agent name — "Contoso Research Agent
+**~25 seconds.** The card demo shows a *different* agent name — "Nashua Research Agent
 (Python)" — so you can see the swap really happened. Then the job demo runs the
 identical lifecycle: background start, continuation token, six polls, `Completed`.
 

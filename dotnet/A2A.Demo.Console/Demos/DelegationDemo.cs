@@ -51,8 +51,8 @@ public sealed class DelegationDemo : IDemoScenario
         // One line turns it into a tool the local agent can call.
         AIFunction remoteAsTool = remote.AsAIFunction(new AIFunctionFactoryOptions
         {
-            Name = "contoso_research_agent",
-            Description = "Delegates a question or a research request to the Contoso Research Agent, "
+            Name = "nashua_research_agent",
+            Description = "Delegates a question or a research request to the Nashua Research Agent, "
                         + "a specialist agent reachable over A2A. Use it for anything involving market "
                         + "research, competitive analysis, or reports.",
         });
@@ -68,7 +68,7 @@ public sealed class DelegationDemo : IDemoScenario
                 """
                 You are a coordinator. You have no research ability of your own.
                 Whenever the user asks anything that needs research, market knowledge,
-                or a report, call the contoso_research_agent tool and relay what it
+                or a report, call the nashua_research_agent tool and relay what it
                 returns. Say which agent produced the answer.
                 """,
             tools: [remoteAsTool]);

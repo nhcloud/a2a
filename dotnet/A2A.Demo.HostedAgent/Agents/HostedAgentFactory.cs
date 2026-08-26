@@ -20,7 +20,7 @@ public sealed class HostedAgentFactory
 {
     private const string Instructions =
         """
-        You are the Contoso Research Agent, reachable over the A2A protocol.
+        You are the Nashua Research Agent, reachable over the A2A protocol.
         Answer clearly and concisely. Prefer short paragraphs and bullet points.
         When asked what you can do, describe your two skills: quick answers and
         long-running market research reports.
@@ -55,7 +55,7 @@ public sealed class HostedAgentFactory
             : new ScriptedChatClient();
 
         return chatClient.AsAIAgent(
-            name: "ContosoResearchAgent",
+            name: "NashuaResearchAgent",
             instructions: Instructions,
             loggerFactory: _loggerFactory);
     }
@@ -74,7 +74,7 @@ public sealed class HostedAgentFactory
             new ApiKeyCredential(_options.ApiKey!),
             new OpenAIClientOptions { Endpoint = new Uri(endpoint) });
 
-        return client.GetChatClient(_options.Deployment!).AsIChatClient();
+        return client.GetResponsesClient().AsIChatClient(_options.Deployment!);
     }
 }
 

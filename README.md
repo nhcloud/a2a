@@ -324,6 +324,14 @@ useful if you hit the same walls.
 - **`AllowBackgroundResponses` and `ContinuationToken` are marked evaluation-only**
   (`MEAI001`) in .NET. Using them needs `<NoWarn>$(NoWarn);MEAI001</NoWarn>`. They work,
   but the API can move.
+- **The Responses API is evaluation-only in .NET too.** `GetResponsesClient()` and
+  `AsIChatClient(ResponsesClient, model)` are gated behind `OPENAI001` in `OpenAI`
+  2.10.0, so both projects also carry `<NoWarn>$(NoWarn);OPENAI001</NoWarn>`. Chat
+  Completions needs no suppression — the newer surface is the gated one.
+- **Watch which OpenAI surface each SDK actually calls.** Both stacks here target the
+  **Responses** API. On the Python side that is `OpenAIChatClient`, whose name suggests
+  otherwise — `OpenAIChatCompletionClient` is the chat-completions one. Getting this
+  wrong is silent: both surfaces work, so the stacks simply stop being comparable.
 - **The hosting API has already moved.** The `app.MapA2A(agent, path, agentCard: …)`
   one-liner in older samples is not the current shape; 1.19 splits it into
   `MapA2AJsonRpc` and `MapA2AHttpJson`, and the run mode moves to `AddA2AServer`.

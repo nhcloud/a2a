@@ -7,7 +7,9 @@
     <UserSecretsId>a2a-demo-console</UserSecretsId>
     <!-- AgentRunOptions.ContinuationToken / AllowBackgroundResponses are marked
          evaluation-only in Agent Framework 1.19.0. The long-running demo uses them. -->
-    <NoWarn>$(NoWarn);MEAI001</NoWarn>
+    <!-- GetResponsesClient() / AsIChatClient(ResponsesClient, model) are evaluation-only
+         in OpenAI 2.10.0. Both stacks target the Responses API, so this is required. -->
+    <NoWarn>$(NoWarn);MEAI001;OPENAI001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

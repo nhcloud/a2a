@@ -269,17 +269,36 @@ async def demo_card(provider: AgentFactoryProvider) -> None:
     Ux.info(f"Name        : {card.name}")
     Ux.info(f"Version     : {card.version}")
     Ux.info(f"Description : {card.description}")
-    Ux.info(f"Streaming   : {getattr(card.capabilities, 'streaming', None)}")
+    Ux.info(f"Streaming   : {card.capabilities.streaming}")
+    Ux.info(f"Push notify : {card.capabilities.push_notifications}")
+    Ux.info(f"Input modes : {', '.join(card.default_input_modes)}")
+    Ux.info(f"Output modes: {', '.join(card.default_output_modes)}")
 
     Ux.heading("Interfaces the card advertises")
-    for iface in card.supported_interfaces or []:
-        Ux.info(f"{iface.protocol_binding:<10} {iface.url}")
+    for iface in card.supported_interfaces:
+        Ux.info(f"{iface.protocol_binding:<10} {iface.url}  (protocol {iface.protocol_version})")
 
     Ux.heading("Skills the card advertises")
-    for skill in card.skills or []:
+    for skill in card.skills:
         Ux.content(skill.id)
         Ux.info(f"    {skill.description}")
-        Ux.info(f"    tags: {', '.join(skill.tags or [])}")
+        Ux.info(f"    tags: {', '.join(skill.tags)}")
+        for example in skill.examples:
+            Ux.info(f'    e.g. "{example}"')
+
+    if card.security_schemes:
+        Ux.heading("Security schemes")
+        for name, scheme in card.security_schemes.items():
+            Ux.info(f"{name}: {scheme.WhichOneof('scheme')}")
+    else:
+        Ux.warn("No security schemes advertised -- fine for a demo, not for production.")
+
+    Ux.heading("Raw card")
+    # Serialized through protobuf's own JSON mapping, so this is the actual wire
+    # format -- camelCase, protocol enum names and all -- not Python's snake_case.
+    from google.protobuf.json_format import MessageToJson
+
+    Ux.wire(MessageToJson(card, indent=2))
 
 
 async def demo_ask(provider: AgentFactoryProvider) -> None:
@@ -402,9 +421,9 @@ async def demo_delegate(provider: AgentFactoryProvider) -> None:
 
     # One call turns it into a tool the local agent can invoke.
     remote_as_tool = remote.as_tool(
-        name="contoso_research_agent",
+        name="nashua_research_agent",
         description=(
-            "Delegates a question or a research request to the Contoso Research Agent, "
+            "Delegates a question or a research request to the Nashua Research Agent, "
             "a specialist agent reachable over A2A. Use it for anything involving market "
             "research, competitive analysis, or reports."
         ),
@@ -420,7 +439,7 @@ async def demo_delegate(provider: AgentFactoryProvider) -> None:
         instructions=(
             "You are a coordinator. You have no research ability of your own.\n"
             "Whenever the user asks anything that needs research, market knowledge,\n"
-            "or a report, call the contoso_research_agent tool and relay what it\n"
+            "or a report, call the nashua_research_agent tool and relay what it\n"
             "returns. Say which agent produced the answer."
         ),
         tools=[remote_as_tool],

@@ -109,6 +109,6 @@ public sealed class AzureOpenAIAgentFactory : IAgentFactory
             new ApiKeyCredential(_options.ApiKey!),
             new OpenAIClientOptions { Endpoint = new Uri(endpoint) });
 
-        return client.GetChatClient(_options.Deployment!).AsIChatClient();
+        return client.GetResponsesClient().AsIChatClient(_options.Deployment!);
     }
 }

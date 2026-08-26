@@ -23,7 +23,7 @@ from agent_framework import (
 from .config import AzureOpenAIOptions
 
 INSTRUCTIONS = (
-    "You are the Contoso Research Agent, reachable over the A2A protocol.\n"
+    "You are the Nashua Research Agent, reachable over the A2A protocol.\n"
     "Answer clearly and concisely. Prefer short paragraphs and bullet points.\n"
     "When asked what you can do, describe your two skills: quick answers and\n"
     "long-running market research reports."
@@ -112,7 +112,7 @@ class HostedAgentFactory:
 
     def _build(self) -> Agent:
         chat_client = self._create_azure_openai_client() if self.is_model_backed else ScriptedChatClient()
-        return chat_client.as_agent(name="ContosoResearchAgent", instructions=INSTRUCTIONS)
+        return chat_client.as_agent(name="NashuaResearchAgent", instructions=INSTRUCTIONS)
 
     def _create_azure_openai_client(self) -> BaseChatClient:
         # Azure AI Foundry and Azure OpenAI both expose an OpenAI-compatible

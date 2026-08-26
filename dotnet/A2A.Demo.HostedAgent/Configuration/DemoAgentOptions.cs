@@ -13,7 +13,7 @@ public sealed class DemoAgentOptions
 {
     public const string SectionName = "A2AAgent";
 
-    public string Name { get; set; } = "Contoso Research Agent";
+    public string Name { get; set; } = "Nashua Research Agent";
 
     public string Description { get; set; } =
         "A demo agent exposed over the Agent2Agent (A2A) protocol.";
