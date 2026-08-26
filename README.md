@@ -3,7 +3,8 @@
 # A2A + Microsoft Agent Framework — live demo
 
 Companion code for **"When AI Agents Work Together: A2A, MCP, and Connected AI"**
-([A2A_Talk.pptx](A2A_Talk.pptx)).
+([A2A_Talk.pptx](A2A_Talk.pptx)), a talk by
+**[Udaiappa Ramachandran](https://linkedin.com/in/udair)** (Udai) — Microsoft MVP (AI).
 
 Two hosts and two clients, one protocol. Each host publishes an agent over A2A;
 each client calls one through the Microsoft Agent Framework as if it were local.
@@ -407,3 +408,20 @@ Local settings live in `python/.env` and `appsettings.Development.json` next to 
 - Agent Framework A2A docs — <https://learn.microsoft.com/agent-framework/integrations/a2a>
 - Agent Framework repo — <https://github.com/microsoft/agent-framework>
 - A2A SDKs — <https://github.com/a2aproject>
+
+## Author
+
+**Udaiappa Ramachandran** (Udai) — CTO / CSO at Akumina Inc., Microsoft MVP (AI).
+
+I speak and write about agent interoperability, the A2A protocol, MCP, and the
+Microsoft Agent Framework, and I run the Nashua Cloud .NET user group.
+
+- LinkedIn — <https://linkedin.com/in/udair>
+- Web — <https://udai.io>
+- Meetup — <https://meetup.com/nashuaug>
+
+**Let's connect.** If you are building agents that need to talk to each other, or you
+have run into something this repo does not cover, reach out on
+[LinkedIn](https://linkedin.com/in/udair) — I would genuinely like to hear what you are
+building. Questions, corrections, and pull requests are all welcome, and if this helped
+you get an A2A agent running, a star on the repo helps other people find it.
