@@ -5,7 +5,7 @@ command, the output worth looking at, and the point it makes. Timings assume the
 offline agent (`Demo:LongRunningStepSeconds: 3.0`) — about 8 minutes end to end, or 4
 if you skip `stream` and `delegate`.
 
-Slide numbers refer to [A2A_Talk.pptx](A2A_Talk.pptx) in this folder, so you can line
+Slide numbers refer to [A2A.pdf](A2A.pdf) in this folder, so you can line
 each demo up with the deck.
 
 ## Setup

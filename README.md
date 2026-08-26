@@ -1,9 +1,9 @@
-<!-- Demo companion for the A2A_Talk.pptx deck in this folder. -->
+<!-- Demo companion for the A2A.pdf deck in this folder. -->
 
 # A2A + Microsoft Agent Framework — live demo
 
 Companion code for **"When AI Agents Work Together: A2A, MCP, and Connected AI"**
-([A2A_Talk.pptx](A2A_Talk.pptx)), a talk by
+([A2A.pdf](A2A.pdf)), a talk by
 **[Udaiappa Ramachandran](https://linkedin.com/in/udair)** (Udai) — Microsoft MVP (AI).
 
 Two hosts and two clients, one protocol. Each host publishes an agent over A2A;
