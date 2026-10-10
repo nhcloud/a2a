@@ -61,7 +61,7 @@ Console.CancelKeyPress += (_, e) =>
 
 Ux.Banner(
     "A2A + Microsoft Agent Framework",
-    "Calling a remote agent as if it were local. .NET 10 · Agent Framework 1.19.0");
+    "Calling a remote agent as if it were local. .NET 10 · Agent Framework 1.24.0");
 
 Ux.Heading("Registered agent factories");
 foreach (IAgentFactory factory in factories.All)

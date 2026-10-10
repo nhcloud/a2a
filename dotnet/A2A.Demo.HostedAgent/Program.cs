@@ -53,10 +53,13 @@ builder.Services.AddControllers();
 
 // ── Path 2: the one-liner ───────────────────────────────────────────────────────
 // Publishes the same Agent Framework agent with no handler and no lifecycle code.
-// AllowBackgroundIfSupported lets callers ask for a Task instead of blocking.
+// Return a Task only when the caller asks for one (ReturnImmediately, which an
+// A2AAgent sets from AllowBackgroundResponses = true); otherwise block and reply
+// with a Message.
 builder.AddA2AServer(agentFactory.Agent, options =>
 {
-    options.AgentRunMode = AgentRunMode.AllowBackgroundIfSupported;
+    options.AgentRunMode = AgentRunMode.ReturnTaskWhen((ctx, _) =>
+        ValueTask.FromResult(ctx.RequestContext.Configuration?.ReturnImmediately == true));
 });
 
 var app = builder.Build();

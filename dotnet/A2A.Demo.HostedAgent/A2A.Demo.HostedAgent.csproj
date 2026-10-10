@@ -4,9 +4,9 @@
     <RootNamespace>A2A.Demo.HostedAgent</RootNamespace>
     <AssemblyName>A2A.Demo.HostedAgent</AssemblyName>
     <UserSecretsId>a2a-demo-hosted-agent</UserSecretsId>
-    <!-- AgentRunMode and the hosting A2A extensions are marked evaluation-only in 1.19.0. -->
+    <!-- AgentRunMode and the hosting A2A extensions are marked evaluation-only in 1.24.0. -->
     <!-- GetResponsesClient() / AsIChatClient(ResponsesClient, model) are evaluation-only
-         in OpenAI 2.10.0. Both stacks target the Responses API, so this is required. -->
+         in OpenAI 2.14.0. Both stacks target the Responses API, so this is required. -->
     <NoWarn>$(NoWarn);MEAI001;OPENAI001</NoWarn>
   </PropertyGroup>
 
@@ -20,7 +20,7 @@
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="$(AgentFrameworkVersion)" />
     <!-- One-line A2A hosting: app.MapA2A(agent, "/path"). Preview. -->
     <PackageReference Include="Microsoft.Agents.AI.Hosting.A2A.AspNetCore" Version="$(AgentFrameworkPreviewVersion)" />
-    <PackageReference Include="OpenAI" Version="2.10.0" />
+    <PackageReference Include="OpenAI" Version="2.14.0" />
   </ItemGroup>
 
 </Project>

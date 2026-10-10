@@ -13,13 +13,13 @@ than asserted.
 
 ```
    .NET console  ┌──────────────────────────────┐          ┌────────────────────────────┐
-   (MAF 1.19.0)  │  A2A.Demo.Console            │───┐  ┌──▶│  A2A.Demo.HostedAgent      │  .NET host
+   (MAF 1.24.0)  │  A2A.Demo.Console            │───┐  ┌──▶│  A2A.Demo.HostedAgent      │  .NET host
                  │  ├─ A2AAgentFactory          │   │  │   │  ASP.NET Core · :5401      │
                  │  └─ AzureOpenAIAgentFactory  │   ├──┤   └────────────────────────────┘
                  └──────────────────────────────┘   │  │
                                                     │  │   Agent Card · 2 skills
    Python        ┌──────────────────────────────┐   │  │   Message + Task lifecycle
-   (MAF 1.15.0)  │  python/a2a_console.py       │───┘  │   ↳ Agent Framework agent
+   (MAF 1.21.0)  │  python/a2a_console.py       │───┘  │   ↳ Agent Framework agent
                  │  same factory pattern        │      │
                  └──────────────────────────────┘      │   ┌────────────────────────────┐
                                                        └──▶│  python/a2a_host.py        │  Python host
@@ -212,7 +212,9 @@ lands on a named method you can breakpoint, and each logs which demo produced it
 **One line** — the Agent Framework hosting package, no handler, no lifecycle code:
 
 ```csharp
-builder.AddA2AServer(agent, o => o.AgentRunMode = AgentRunMode.AllowBackgroundIfSupported);
+// Task only when the caller sets returnImmediately; otherwise a Message.
+builder.AddA2AServer(agent, o => o.AgentRunMode = AgentRunMode.ReturnTaskWhen((ctx, _) =>
+    ValueTask.FromResult(ctx.RequestContext.Configuration?.ReturnImmediately == true)));
 // ...
 app.MapA2AJsonRpc(agent, "/a2a/simple");
 app.MapA2AHttpJson(agent, "/a2a/simple-http");
@@ -295,20 +297,20 @@ event sequence, so a client cannot tell which one it is talking to.
 
 ## Versions
 
-Checked against nuget.org and PyPI on 2026-08-23.
+Checked against nuget.org and PyPI on 2026-10-10.
 
 | Package                                     | Version                  | Status  |
 | ------------------------------------------- | ------------------------ | ------- |
-| `Microsoft.Agents.AI`                       | `1.19.0`                 | stable  |
-| `Microsoft.Agents.AI.OpenAI`                | `1.19.0`                 | stable  |
-| `Microsoft.Agents.AI.A2A`                   | `1.19.0-preview.260822.1`| preview |
-| `Microsoft.Agents.AI.Hosting.A2A`           | `1.19.0-preview.260822.1`| preview |
-| `Microsoft.Agents.AI.Hosting.A2A.AspNetCore`| `1.19.0-preview.260822.1`| preview |
+| `Microsoft.Agents.AI`                       | `1.24.0`                 | stable  |
+| `Microsoft.Agents.AI.OpenAI`                | `1.24.0`                 | stable  |
+| `Microsoft.Agents.AI.A2A`                   | `1.24.0-preview.261006.1`| preview |
+| `Microsoft.Agents.AI.Hosting.A2A`           | `1.24.0-preview.261006.1`| preview |
+| `Microsoft.Agents.AI.Hosting.A2A.AspNetCore`| `1.24.0-preview.261006.1`| preview |
 | `A2A` / `A2A.AspNetCore`                    | `1.0.0-preview2`         | preview |
-| `agent-framework-core` (Python)             | `1.15.0`                 | stable  |
-| `agent-framework-a2a` (Python)              | `1.0.0b260821`           | beta    |
-| `agent-framework-openai` (Python)           | `1.14.0`                 | stable  |
-| `a2a-sdk` (Python)                          | `1.1.2`                  |         |
+| `agent-framework-core` (Python)             | `1.21.0`                 | stable  |
+| `agent-framework-a2a` (Python)              | `1.0.0b261002`           | beta    |
+| `agent-framework-openai` (Python)           | `1.16.0`                 | stable  |
+| `a2a-sdk` (Python)                          | `1.2.2`                  |         |
 
 Versions are centralised in [dotnet/Directory.Build.props](dotnet/Directory.Build.props).
 
@@ -321,13 +323,13 @@ useful if you hit the same walls.
 **Package and API stability**
 
 - **The Agent Framework's A2A packages are all pre-release**, while the core framework
-  is stable at 1.19.0. Python trails at 1.15.0 with a beta A2A package.
+  is stable at 1.24.0. Python trails at 1.21.0 with a beta A2A package.
 - **`AllowBackgroundResponses` and `ContinuationToken` are marked evaluation-only**
   (`MEAI001`) in .NET. Using them needs `<NoWarn>$(NoWarn);MEAI001</NoWarn>`. They work,
   but the API can move.
 - **The Responses API is evaluation-only in .NET too.** `GetResponsesClient()` and
   `AsIChatClient(ResponsesClient, model)` are gated behind `OPENAI001` in `OpenAI`
-  2.10.0, so both projects also carry `<NoWarn>$(NoWarn);OPENAI001</NoWarn>`. Chat
+  2.14.0, so both projects also carry `<NoWarn>$(NoWarn);OPENAI001</NoWarn>`. Chat
   Completions needs no suppression — the newer surface is the gated one.
 - **Watch which OpenAI surface each SDK actually calls.** Both stacks here target the
   **Responses** API. On the Python side that is `OpenAIChatClient`, whose name suggests
@@ -336,6 +338,8 @@ useful if you hit the same walls.
 - **The hosting API has already moved.** The `app.MapA2A(agent, path, agentCard: …)`
   one-liner in older samples is not the current shape; 1.19 splits it into
   `MapA2AJsonRpc` and `MapA2AHttpJson`, and the run mode moves to `AddA2AServer`.
+  1.24 then drops `AgentRunMode.AllowBackgroundIfSupported`; the same behaviour is now
+  `AgentRunMode.ReturnTaskWhen(...)` checking `Configuration.ReturnImmediately`.
 - **The HTTP+JSON routes have no `/v1` segment** in `A2A` 1.0.0-preview2 — it is
   `/message:send`, not `/v1/message:send` as some samples show.
 - **JSON-RPC method names are PascalCase** in this SDK (`SendMessage`, `GetTask`), not

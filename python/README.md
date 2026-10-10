@@ -121,18 +121,18 @@ returns if you have not set it up.
 
 ## Versions
 
-Checked on 2026-08-23:
+Checked on 2026-10-10:
 
 | Package                  | Version        | Notes                                 |
 | ------------------------ | -------------- | ------------------------------------- |
-| `agent-framework`        | `1.15.0`       | stable meta-package                   |
-| `agent-framework-core`   | `1.15.0`       | stable                                |
-| `agent-framework-a2a`    | `1.0.0b260821` | beta — the A2A integration is pre-1.0 |
-| `agent-framework-openai` | `1.14.0`       | stable                                |
-| `a2a-sdk`                | `1.1.2`        |                                       |
+| `agent-framework`        | `1.21.0`       | stable meta-package                   |
+| `agent-framework-core`   | `1.21.0`       | stable                                |
+| `agent-framework-a2a`    | `1.0.0b261002` | beta — the A2A integration is pre-1.0 |
+| `agent-framework-openai` | `1.16.0`       | stable                                |
+| `a2a-sdk`                | `1.2.2`        |                                       |
 
-Python trails .NET: the .NET Agent Framework is on 1.19.0 while Python's stable line
-is 1.15.0, and the A2A packages are pre-release on both.
+Python trails .NET: the .NET Agent Framework is on 1.24.0 while Python's stable line
+is 1.21.0, and the A2A packages are pre-release on both.
 
 ## Where the two SDKs differ
 
