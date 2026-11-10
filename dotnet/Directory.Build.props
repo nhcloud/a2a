@@ -7,10 +7,10 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
     <!-- Microsoft Agent Framework .NET -->
-    <AgentFrameworkVersion>1.24.0</AgentFrameworkVersion>
-    <!-- The A2A integration + hosting packages ship on the same 1.24 train, as previews -->
-    <AgentFrameworkPreviewVersion>1.24.0-preview.261006.1</AgentFrameworkPreviewVersion>
+    <AgentFrameworkVersion>1.28.0</AgentFrameworkVersion>
+    <!-- The A2A integration + hosting packages ship on the same 1.28 train, as previews -->
+    <AgentFrameworkPreviewVersion>1.28.0-preview.261106.1</AgentFrameworkPreviewVersion>
     <!-- The A2A protocol SDK the Agent Framework builds on -->
-    <A2AProtocolVersion>1.0.0-preview2</A2AProtocolVersion>
+    <A2AProtocolVersion>1.0.0-preview4</A2AProtocolVersion>
   </PropertyGroup>
 </Project>

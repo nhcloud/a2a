@@ -1,16 +1,16 @@
 # Microsoft Agent Framework for Python + the A2A SDK.
-# Checked against PyPI on 2026-10-10:
-#   agent-framework-core    1.21.0        (stable)
-#   agent-framework-a2a     1.0.0b261002  (beta -- the A2A integration is still pre-1.0)
-#   agent-framework-openai  1.16.0        (stable; also covers Azure OpenAI endpoints)
-#   a2a-sdk                 1.2.2
+# Checked against PyPI on 2026-11-10:
+#   agent-framework-core    1.25.0        (stable)
+#   agent-framework-a2a     1.0.0b261106  (beta -- the A2A integration is still pre-1.0)
+#   agent-framework-openai  1.18.1        (stable; also covers Azure OpenAI endpoints)
+#   a2a-sdk                 1.3.0
 
 # Client: wraps a remote A2A agent as an Agent Framework agent.
-agent-framework-a2a==1.0.0b261002
+agent-framework-a2a==1.0.0b261106
 
 # Host: the A2A server routes need Starlette + sse-starlette, pulled in by the
 # http-server extra. uvicorn actually serves it.
-a2a-sdk[http-server]==1.2.2
+a2a-sdk[http-server]==1.3.0
 uvicorn>=0.34
 
 # Reads python/.env (copy the repo root's .env.template). Pulled in transitively
@@ -19,4 +19,4 @@ python-dotenv>=1.0
 
 # Only needed to put a real model behind the agent. Leave it installed; the host
 # falls back to a scripted agent when AzureOpenAI is unconfigured.
-agent-framework-openai==1.16.0
+agent-framework-openai==1.18.1

@@ -1,5 +1,6 @@
 using A2A.AspNetCore;
 using A2A.Demo.HostedAgent.Agents;
+using Microsoft.Agents.AI.Hosting;
 using Microsoft.Agents.AI.Hosting.A2A;
 using Microsoft.Extensions.Options;
 
@@ -53,14 +54,10 @@ builder.Services.AddControllers();
 
 // ── Path 2: the one-liner ───────────────────────────────────────────────────────
 // Publishes the same Agent Framework agent with no handler and no lifecycle code.
-// Return a Task only when the caller asks for one (ReturnImmediately, which an
-// A2AAgent sets from AllowBackgroundResponses = true); otherwise block and reply
-// with a Message.
-builder.AddA2AServer(agentFactory.Agent, options =>
-{
-    options.AgentRunMode = AgentRunMode.ReturnTaskWhen((ctx, _) =>
-        ValueTask.FromResult(ctx.RequestContext.Configuration?.ReturnImmediately == true));
-});
+// It always answers with a Message: since 1.28 the run mode is no longer an option
+// on AddA2AServer, and the default registration uses AgentRunMode.ReturnMessage.
+// Tasks, polling and streaming progress are what path 1 (/a2a) is for.
+builder.AddA2AServer(agentFactory.Agent);
 
 var app = builder.Build();
 
@@ -82,7 +79,7 @@ app.MapControllers();
 //   POST /a2a/simple                        JSON-RPC
 //   POST /a2a/simple-http/message:send      HTTP+JSON  (also message:stream)
 //   GET  /a2a/simple-http/card              HTTP+JSON agent card
-// Note: no "/v1" path segment in A2A 1.0.0-preview2, despite what older samples show.
+// Note: no "/v1" path segment in A2A 1.0.0-preview4, despite what older samples show.
 app.MapA2AJsonRpc(agentFactory.Agent, "/a2a/simple");
 app.MapA2AHttpJson(agentFactory.Agent, "/a2a/simple-http");
 

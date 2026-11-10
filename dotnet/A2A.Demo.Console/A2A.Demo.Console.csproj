@@ -6,14 +6,14 @@
     <AssemblyName>A2A.Demo.Console</AssemblyName>
     <UserSecretsId>a2a-demo-console</UserSecretsId>
     <!-- AgentRunOptions.ContinuationToken / AllowBackgroundResponses are marked
-         evaluation-only in Agent Framework 1.24.0. The long-running demo uses them. -->
+         evaluation-only in Agent Framework 1.28.0. The long-running demo uses them. -->
     <!-- GetResponsesClient() / AsIChatClient(ResponsesClient, model) are evaluation-only
          in OpenAI 2.14.0. Both stacks target the Responses API, so this is required. -->
     <NoWarn>$(NoWarn);MEAI001;OPENAI001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Microsoft Agent Framework (.NET) 1.24.0 -->
+    <!-- Microsoft Agent Framework (.NET) 1.28.0 -->
     <PackageReference Include="Microsoft.Agents.AI" Version="$(AgentFrameworkVersion)" />
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="$(AgentFrameworkVersion)" />
     <!-- A2A integration ships on the same train, as a preview -->
@@ -24,12 +24,12 @@
 
     <PackageReference Include="OpenAI" Version="2.14.0" />
 
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup>

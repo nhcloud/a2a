@@ -13,13 +13,13 @@ than asserted.
 
 ```
    .NET console  ┌──────────────────────────────┐          ┌────────────────────────────┐
-   (MAF 1.24.0)  │  A2A.Demo.Console            │───┐  ┌──▶│  A2A.Demo.HostedAgent      │  .NET host
+   (MAF 1.28.0)  │  A2A.Demo.Console            │───┐  ┌──▶│  A2A.Demo.HostedAgent      │  .NET host
                  │  ├─ A2AAgentFactory          │   │  │   │  ASP.NET Core · :5401      │
                  │  └─ AzureOpenAIAgentFactory  │   ├──┤   └────────────────────────────┘
                  └──────────────────────────────┘   │  │
                                                     │  │   Agent Card · 2 skills
    Python        ┌──────────────────────────────┐   │  │   Message + Task lifecycle
-   (MAF 1.21.0)  │  python/a2a_console.py       │───┘  │   ↳ Agent Framework agent
+   (MAF 1.25.0)  │  python/a2a_console.py       │───┘  │   ↳ Agent Framework agent
                  │  same factory pattern        │      │
                  └──────────────────────────────┘      │   ┌────────────────────────────┐
                                                        └──▶│  python/a2a_host.py        │  Python host
@@ -212,9 +212,7 @@ lands on a named method you can breakpoint, and each logs which demo produced it
 **One line** — the Agent Framework hosting package, no handler, no lifecycle code:
 
 ```csharp
-// Task only when the caller sets returnImmediately; otherwise a Message.
-builder.AddA2AServer(agent, o => o.AgentRunMode = AgentRunMode.ReturnTaskWhen((ctx, _) =>
-    ValueTask.FromResult(ctx.RequestContext.Configuration?.ReturnImmediately == true)));
+builder.AddA2AServer(agent);
 // ...
 app.MapA2AJsonRpc(agent, "/a2a/simple");
 app.MapA2AHttpJson(agent, "/a2a/simple-http");
@@ -236,8 +234,8 @@ POST /a2a/simple-http/message:send       HTTP+JSON
 GET  /a2a/simple-http/card               HTTP+JSON card (.NET only)
 ```
 
-One behavioural difference worth knowing: .NET's one-liner returns a plain `Message`
-when the agent can answer immediately, while Python's `A2AExecutor` always creates a
+One behavioural difference worth knowing: .NET's one-liner always returns a plain
+`Message`, while Python's `A2AExecutor` always creates a
 `Task`. Both are legal A2A; they are not the same caller experience.
 
 ## Which demo hits what
@@ -297,20 +295,20 @@ event sequence, so a client cannot tell which one it is talking to.
 
 ## Versions
 
-Checked against nuget.org and PyPI on 2026-10-10.
+Checked against nuget.org and PyPI on 2026-11-10.
 
 | Package                                     | Version                  | Status  |
 | ------------------------------------------- | ------------------------ | ------- |
-| `Microsoft.Agents.AI`                       | `1.24.0`                 | stable  |
-| `Microsoft.Agents.AI.OpenAI`                | `1.24.0`                 | stable  |
-| `Microsoft.Agents.AI.A2A`                   | `1.24.0-preview.261006.1`| preview |
-| `Microsoft.Agents.AI.Hosting.A2A`           | `1.24.0-preview.261006.1`| preview |
-| `Microsoft.Agents.AI.Hosting.A2A.AspNetCore`| `1.24.0-preview.261006.1`| preview |
-| `A2A` / `A2A.AspNetCore`                    | `1.0.0-preview2`         | preview |
-| `agent-framework-core` (Python)             | `1.21.0`                 | stable  |
-| `agent-framework-a2a` (Python)              | `1.0.0b261002`           | beta    |
-| `agent-framework-openai` (Python)           | `1.16.0`                 | stable  |
-| `a2a-sdk` (Python)                          | `1.2.2`                  |         |
+| `Microsoft.Agents.AI`                       | `1.28.0`                 | stable  |
+| `Microsoft.Agents.AI.OpenAI`                | `1.28.0`                 | stable  |
+| `Microsoft.Agents.AI.A2A`                   | `1.28.0-preview.261106.1`| preview |
+| `Microsoft.Agents.AI.Hosting.A2A`           | `1.28.0-preview.261106.1`| preview |
+| `Microsoft.Agents.AI.Hosting.A2A.AspNetCore`| `1.28.0-preview.261106.1`| preview |
+| `A2A` / `A2A.AspNetCore`                    | `1.0.0-preview4`         | preview |
+| `agent-framework-core` (Python)             | `1.25.0`                 | stable  |
+| `agent-framework-a2a` (Python)              | `1.0.0b261106`           | beta    |
+| `agent-framework-openai` (Python)           | `1.18.1`                 | stable  |
+| `a2a-sdk` (Python)                          | `1.3.0`                  |         |
 
 Versions are centralised in [dotnet/Directory.Build.props](dotnet/Directory.Build.props).
 
@@ -323,7 +321,7 @@ useful if you hit the same walls.
 **Package and API stability**
 
 - **The Agent Framework's A2A packages are all pre-release**, while the core framework
-  is stable at 1.24.0. Python trails at 1.21.0 with a beta A2A package.
+  is stable at 1.28.0. Python trails at 1.25.0 with a beta A2A package.
 - **`AllowBackgroundResponses` and `ContinuationToken` are marked evaluation-only**
   (`MEAI001`) in .NET. Using them needs `<NoWarn>$(NoWarn);MEAI001</NoWarn>`. They work,
   but the API can move.
@@ -338,9 +336,19 @@ useful if you hit the same walls.
 - **The hosting API has already moved.** The `app.MapA2A(agent, path, agentCard: …)`
   one-liner in older samples is not the current shape; 1.19 splits it into
   `MapA2AJsonRpc` and `MapA2AHttpJson`, and the run mode moves to `AddA2AServer`.
-  1.24 then drops `AgentRunMode.AllowBackgroundIfSupported`; the same behaviour is now
-  `AgentRunMode.ReturnTaskWhen(...)` checking `Configuration.ReturnImmediately`.
-- **The HTTP+JSON routes have no `/v1` segment** in `A2A` 1.0.0-preview2 — it is
+  1.24 then drops `AgentRunMode.AllowBackgroundIfSupported` for `ReturnTaskWhen(...)`,
+  and 1.28 removes `AgentRunMode` from `AddA2AServer` altogether: the one-liner now
+  always returns a `Message`, and the handler that accepts a run mode is internal.
+  If you need Tasks, write the handler yourself (path 1).
+- **`A2A` 1.0.0-preview4 changed signatures.** Every `IA2ARequestHandler` method takes an
+  `A2ARequestContext?` (negotiated extensions) before the `CancellationToken`;
+  `TaskUpdater` / `MessageResponder` methods gained an optional `metadata` argument in
+  the same slot, so a positional token no longer compiles; and
+  `ListTaskPushNotificationConfig` is now `ListTaskPushNotificationConfigs`.
+- **Keep `OpenAI` on the version the Agent Framework was built against.** `OpenAI`
+  2.15.0 compiles fine with Agent Framework 1.28 but fails at runtime with
+  `MissingMethodException` on `CreateResponseStreamingAsync`; 1.28 depends on 2.14.0.
+- **The HTTP+JSON routes have no `/v1` segment** in `A2A` 1.0.0-preview4 — it is
   `/message:send`, not `/v1/message:send` as some samples show.
 - **JSON-RPC method names are PascalCase** in this SDK (`SendMessage`, `GetTask`), not
   the `message/send` form older samples use.

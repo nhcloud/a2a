@@ -51,7 +51,7 @@ public sealed class QuickAnswerSkill : IA2ASkill
             .ConfigureAwait(false);
 
         var responder = new MessageResponder(eventQueue, context.ContextId);
-        await responder.ReplyAsync(response.Text, cancellationToken).ConfigureAwait(false);
+        await responder.ReplyAsync(response.Text, cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<AgentSession> GetSessionAsync(string? contextId, CancellationToken cancellationToken)

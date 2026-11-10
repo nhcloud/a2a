@@ -77,14 +77,14 @@ public sealed class MarketResearchSkill : IA2ASkill
         {
             // 1. Acknowledge. The caller gets a task id back straight away and can
             //    disconnect here — the work carries on server-side.
-            await updater.SubmitAsync(cancellationToken).ConfigureAwait(false);
+            await updater.SubmitAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
             await updater.StartWorkAsync(
                 A2AMessageFactory.AgentText(
                     $"Starting research on \"{topic}\". {Sections.Length} sections to produce.",
                     updater.ContextId,
                     updater.TaskId),
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken: cancellationToken).ConfigureAwait(false);
 
             // 2. Do the work in steps, reporting progress and streaming the artifact
             //    as it is written rather than hoarding it until the end.
@@ -103,7 +103,7 @@ public sealed class MarketResearchSkill : IA2ASkill
                         $"Step {i + 1} of {Sections.Length}: {heading}",
                         updater.ContextId,
                         updater.TaskId),
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
 
                 await Task.Delay(_stepDelay, cancellationToken).ConfigureAwait(false);
 
@@ -131,19 +131,19 @@ public sealed class MarketResearchSkill : IA2ASkill
                     $"Research complete. The full report is attached as artifact \"{ArtifactId}\".",
                     updater.ContextId,
                     updater.TaskId),
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken: cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
             _logger.LogInformation("market-research | task {TaskId} canceled", updater.TaskId);
-            await updater.CancelAsync(CancellationToken.None).ConfigureAwait(false);
+            await updater.CancelAsync(cancellationToken: CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "market-research | task {TaskId} failed", updater.TaskId);
             await updater.FailAsync(
                 A2AMessageFactory.AgentText($"Research failed: {ex.Message}", updater.ContextId, updater.TaskId),
-                CancellationToken.None).ConfigureAwait(false);
+                cancellationToken: CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

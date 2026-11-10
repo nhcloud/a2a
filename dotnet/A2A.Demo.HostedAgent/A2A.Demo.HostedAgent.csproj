@@ -4,10 +4,9 @@
     <RootNamespace>A2A.Demo.HostedAgent</RootNamespace>
     <AssemblyName>A2A.Demo.HostedAgent</AssemblyName>
     <UserSecretsId>a2a-demo-hosted-agent</UserSecretsId>
-    <!-- AgentRunMode and the hosting A2A extensions are marked evaluation-only in 1.24.0. -->
     <!-- GetResponsesClient() / AsIChatClient(ResponsesClient, model) are evaluation-only
          in OpenAI 2.14.0. Both stacks target the Responses API, so this is required. -->
-    <NoWarn>$(NoWarn);MEAI001;OPENAI001</NoWarn>
+    <NoWarn>$(NoWarn);OPENAI001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

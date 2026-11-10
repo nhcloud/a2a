@@ -82,7 +82,7 @@ public sealed class A2AController : ControllerBase
                 // rather than a 404 or an exception.
                 A2AMethods.CreateTaskPushNotificationConfig or
                 A2AMethods.GetTaskPushNotificationConfig or
-                A2AMethods.ListTaskPushNotificationConfig or
+                A2AMethods.ListTaskPushNotificationConfigs or
                 A2AMethods.DeleteTaskPushNotificationConfig =>
                     JsonRpc(JsonRpcResponse.PushNotificationNotSupportedResponse(
                         request.Id, $"This agent does not support {request.Method}.")),
@@ -123,7 +123,7 @@ public sealed class A2AController : ControllerBase
             Preview(payload.Message));
 
         SendMessageResponse response = await _handler
-            .SendMessageAsync(payload, cancellationToken)
+            .SendMessageAsync(payload, ExtensionContext, cancellationToken)
             .ConfigureAwait(false);
 
         _logger.LogInformation(
@@ -147,7 +147,7 @@ public sealed class A2AController : ControllerBase
 
         // RequestAborted, not the action's token: the enumeration outlives this method.
         return new HttpResultActionResult(new JsonRpcStreamedResult(
-            _handler.SendStreamingMessageAsync(payload, HttpContext.RequestAborted),
+            _handler.SendStreamingMessageAsync(payload, ExtensionContext, HttpContext.RequestAborted),
             request.Id));
     }
 
@@ -160,7 +160,7 @@ public sealed class A2AController : ControllerBase
     {
         var payload = ParamsAs<GetTaskRequest>(request);
 
-        AgentTask task = await _handler.GetTaskAsync(payload, cancellationToken).ConfigureAwait(false);
+        AgentTask task = await _handler.GetTaskAsync(payload, ExtensionContext, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation(
             "   GetTask {TaskId} | state {State} | {Artifacts} artifact(s)",
@@ -174,7 +174,7 @@ public sealed class A2AController : ControllerBase
     public async Task<IActionResult> ListTasksAsync(JsonRpcRequest request, CancellationToken cancellationToken)
     {
         var payload = ParamsAs<ListTasksRequest>(request);
-        ListTasksResponse response = await _handler.ListTasksAsync(payload, cancellationToken).ConfigureAwait(false);
+        ListTasksResponse response = await _handler.ListTasksAsync(payload, ExtensionContext, cancellationToken).ConfigureAwait(false);
         return JsonRpcOk(request.Id, response);
     }
 
@@ -183,7 +183,7 @@ public sealed class A2AController : ControllerBase
     public async Task<IActionResult> CancelTaskAsync(JsonRpcRequest request, CancellationToken cancellationToken)
     {
         var payload = ParamsAs<CancelTaskRequest>(request);
-        AgentTask task = await _handler.CancelTaskAsync(payload, cancellationToken).ConfigureAwait(false);
+        AgentTask task = await _handler.CancelTaskAsync(payload, ExtensionContext, cancellationToken).ConfigureAwait(false);
         return JsonRpcOk(request.Id, task);
     }
 
@@ -196,7 +196,7 @@ public sealed class A2AController : ControllerBase
     {
         var payload = ParamsAs<SubscribeToTaskRequest>(request);
         return new HttpResultActionResult(new JsonRpcStreamedResult(
-            _handler.SubscribeToTaskAsync(payload, HttpContext.RequestAborted),
+            _handler.SubscribeToTaskAsync(payload, ExtensionContext, HttpContext.RequestAborted),
             request.Id));
     }
 
@@ -205,11 +205,18 @@ public sealed class A2AController : ControllerBase
     public async Task<IActionResult> GetExtendedAgentCardAsync(JsonRpcRequest request, CancellationToken cancellationToken)
     {
         var payload = ParamsAs<GetExtendedAgentCardRequest>(request);
-        AgentCard card = await _handler.GetExtendedAgentCardAsync(payload, cancellationToken).ConfigureAwait(false);
+        AgentCard card = await _handler.GetExtendedAgentCardAsync(payload, ExtensionContext, cancellationToken).ConfigureAwait(false);
         return JsonRpcOk(request.Id, card);
     }
 
     // ── Plumbing ────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// The negotiated A2A extensions for this request, which A2A 1.0.0-preview4 passes to
+    /// every handler call. Only set when the host configures extension negotiation; this
+    /// demo does not, so it is null — exactly what <c>MapA2A</c> would pass.
+    /// </summary>
+    private A2ARequestContext? ExtensionContext => HttpContext.Features.Get<A2ARequestContext>();
 
     /// <summary>Deserializes the JSON-RPC <c>params</c> member into the request type A2A defines for it.</summary>
     private static T ParamsAs<T>(JsonRpcRequest request) where T : new() =>

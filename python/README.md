@@ -121,18 +121,18 @@ returns if you have not set it up.
 
 ## Versions
 
-Checked on 2026-10-10:
+Checked on 2026-11-10:
 
 | Package                  | Version        | Notes                                 |
 | ------------------------ | -------------- | ------------------------------------- |
-| `agent-framework`        | `1.21.0`       | stable meta-package                   |
-| `agent-framework-core`   | `1.21.0`       | stable                                |
-| `agent-framework-a2a`    | `1.0.0b261002` | beta — the A2A integration is pre-1.0 |
-| `agent-framework-openai` | `1.16.0`       | stable                                |
-| `a2a-sdk`                | `1.2.2`        |                                       |
+| `agent-framework`        | `1.25.0`       | stable meta-package                   |
+| `agent-framework-core`   | `1.25.0`       | stable                                |
+| `agent-framework-a2a`    | `1.0.0b261106` | beta — the A2A integration is pre-1.0 |
+| `agent-framework-openai` | `1.18.1`       | stable                                |
+| `a2a-sdk`                | `1.3.0`        |                                       |
 
-Python trails .NET: the .NET Agent Framework is on 1.24.0 while Python's stable line
-is 1.21.0, and the A2A packages are pre-release on both.
+Python trails .NET: the .NET Agent Framework is on 1.28.0 while Python's stable line
+is 1.25.0, and the A2A packages are pre-release on both.
 
 ## Where the two SDKs differ
 
@@ -158,7 +158,7 @@ TaskStatusUpdateEvent"* unless you enqueue `new_task_from_user_message(...)` fir
 See the top of `market_research.py`.
 
 **The one-liner paths disagree about Message vs. Task.** .NET's `MapA2AJsonRpc`
-returns a plain `Message` when the agent answers immediately. Python's `A2AExecutor`
+always returns a plain `Message`. Python's `A2AExecutor`
 always creates a `Task`, and streams the answer into an artifact one word per part.
 Both are legal; they are not the same caller experience.
 

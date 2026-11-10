@@ -32,7 +32,7 @@ public sealed class DemoAgentHandler : IAgentHandler
         {
             var responder = new MessageResponder(eventQueue, context.ContextId);
             await responder.ReplyAsync(
-                "No skill on this agent can handle that request.", cancellationToken).ConfigureAwait(false);
+                "No skill on this agent can handle that request.", cancellationToken: cancellationToken).ConfigureAwait(false);
             return;
         }
 
